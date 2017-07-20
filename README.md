@@ -1,4 +1,4 @@
-## Java Zendesk Migration Tool
+## Zendesk Migration Tool
 
 Migrate categories, sections and articles from one Zendesk account to another.
 
