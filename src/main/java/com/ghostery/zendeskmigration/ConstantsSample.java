@@ -11,7 +11,7 @@ package com.ghostery.zendeskmigration;
 
 public interface ConstantsSample {
 	String EVIDON_USER = "XXXXXXXXXXXX";
-	String EVIDON_PASS = "XXXXXXXXXXXX";
+	String EVIDON_TOKEN = "XXXXXXXXXXXX";
 	String GHOSTERY_USER = "XXXXXXXXXXXX";
 	String GHOSTERY_TOKEN = "XXXXXXXXXXXX";
 }

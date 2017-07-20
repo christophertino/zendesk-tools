@@ -24,7 +24,7 @@ import static com.ghostery.zendeskmigration.Constants.*;
 
 public class ZendeskMigration {
 
-	private final String evidonCreds = Base64.getEncoder().encodeToString((EVIDON_USER + ':' + EVIDON_PASS).getBytes(StandardCharsets.UTF_8));
+	private final String evidonCreds = Base64.getEncoder().encodeToString((EVIDON_USER + "/token:" + EVIDON_TOKEN).getBytes(StandardCharsets.UTF_8));
 	private final String ghosteryCreds = Base64.getEncoder().encodeToString((GHOSTERY_USER + "/token:" + GHOSTERY_TOKEN).getBytes(StandardCharsets.UTF_8));
 	private HashMap<Integer, Long> sectionIDs = new HashMap<>();
 
@@ -32,7 +32,8 @@ public class ZendeskMigration {
 		this.mapSectionIDs();
 		//this.getContent("categories");
 		//this.getContent("sections");
-		this.getContent("articles");
+		//this.getContent("articles");
+		this.getTickets();
 	}
 
 	/**
@@ -46,7 +47,7 @@ public class ZendeskMigration {
 		String evidonHelpCenterURL = "https://ghostery.zendesk.com/api/v2/help_center/en-us/";
 
 		RequestBuilder builder = new RequestBuilder("GET");
-		Request request = builder.setUrl(evidonHelpCenterURL + type + ".json?per_page=100&page=2") //&page=2
+		Request request = builder.setUrl(evidonHelpCenterURL + type + ".json?per_page=100") //&page=2
 				.addHeader("Accept","application/json")
 				.addHeader("Authorization", "Basic " + evidonCreds)
 				.build();
@@ -124,6 +125,42 @@ public class ZendeskMigration {
 				future.cancel(true);
 			}
 		}
+	}
+
+	private void getTickets() throws ExecutionException, InterruptedException {
+		System.out.println("FETCHING TICKETS...");
+		String evidonZendeskAPI = "https://ghostery.zendesk.com/api/v2/tickets.json?include=users";
+
+		RequestBuilder builder = new RequestBuilder("GET");
+		Request request = builder.setUrl(evidonZendeskAPI) //&page=2
+				.addHeader("Accept","application/json")
+				.addHeader("Authorization", "Basic " + evidonCreds)
+				.build();
+
+		Future<Response> future = this.doAsyncRequest(request);
+		//block execution until future resolves
+		Response result = future.get();
+
+		//Convert to JSON Object and extract data
+		JSONObject responseObject = new JSONObject(result.getResponseBody());
+		JSONArray responseTicketArray = responseObject.getJSONArray("tickets");
+
+		JSONArray tickets = new JSONArray();
+		for (int i = 0; i < responseTicketArray.length(); i++) {
+			JSONObject obj = new JSONObject();
+			JSONArray tags =  responseTicketArray.getJSONObject(i).getJSONArray("tags");
+			//only get plugin tickets
+			if (tags.toString().contains("plugin")) {
+				String subject = responseTicketArray.getJSONObject(i).getString("subject");
+				String description = responseTicketArray.getJSONObject(i).getString("description");
+				Integer requester_id = responseTicketArray.getJSONObject(i).getInt("requester_id");
+				obj.put("subject", subject);
+				obj.put("description", description);
+				obj.put("requester_id", requester_id);
+			}
+			tickets.put(obj);
+		}
+		System.out.printf( "JSON: %s", tickets.toString(2) );
 	}
 
 	private Future<Response> doAsyncRequest(Request request) {
