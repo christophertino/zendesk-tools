@@ -129,7 +129,7 @@ public class ZendeskMigration {
 
 	private void getTickets() throws ExecutionException, InterruptedException {
 		System.out.println("FETCHING TICKETS...");
-		String evidonZendeskAPI = "https://ghostery.zendesk.com/api/v2/tickets.json?include=users";
+		String evidonZendeskAPI = "https://ghostery.zendesk.com/api/v2/tickets.json?include=users,comment_count&per_page=1&page=10";
 
 		RequestBuilder builder = new RequestBuilder("GET");
 		Request request = builder.setUrl(evidonZendeskAPI) //&page=2
@@ -144,23 +144,135 @@ public class ZendeskMigration {
 		//Convert to JSON Object and extract data
 		JSONObject responseObject = new JSONObject(result.getResponseBody());
 		JSONArray responseTicketArray = responseObject.getJSONArray("tickets");
+		JSONArray responseUserArray = responseObject.getJSONArray("users");
 
-		JSONArray tickets = new JSONArray();
-		for (int i = 0; i < responseTicketArray.length(); i++) {
+		HashMap<String, Integer> userMap = this.postUsers(responseUserArray);
+
+		System.out.println("herer " + userMap.toString());
+
+		//TODO: now map the new user IDs to the ticket comments. First user is the requester.
+
+//		JSONArray tickets = new JSONArray();
+//		for (int i = 0; i < responseTicketArray.length(); i++) {
+//			JSONObject obj = new JSONObject();
+//
+//			JSONObject theTicket = responseTicketArray.getJSONObject(i);
+//			JSONArray tags =  theTicket.getJSONArray("tags");
+//			//only get plugin tickets
+//			if (tags.toString().contains("plugin")) {
+//				obj.put("subject", theTicket.getString("subject"));
+//				obj.put("requester_id", theTicket.getInt("requester_id"));
+//				obj.put("status", theTicket.getString("status"));
+//				obj.put("created_at", theTicket.getString("created_at"));
+//				obj.put("updated_at", theTicket.getString("updated_at"));
+//				if (theTicket.get("comment_count") != null) {
+//					//get attached comments
+//					obj.put("comment", this.getTicketComments(theTicket.getInt("id")).getJSONObject(0));
+//				}
+//			}
+//			tickets.put(obj);
+//		}
+//		System.out.printf( "JSON: %s", tickets.toString(2) );
+//
+//		this.postTickets(tickets);
+	}
+
+	private JSONArray getTicketComments(Integer ticketID) throws ExecutionException, InterruptedException {
+		System.out.println("FETCHING COMMENTS...");
+		RequestBuilder commentBuild = new RequestBuilder("GET");
+		Request commentRequest = commentBuild.setUrl("https://ghostery.zendesk.com/api/v2/tickets/" + ticketID + "/comments.json")
+				.addHeader("Accept","application/json")
+				.addHeader("Authorization", "Basic " + evidonCreds)
+				.build();
+		Future<Response> commentFuture = this.doAsyncRequest(commentRequest);
+		Response commentResult = commentFuture.get();
+
+		JSONObject responseCommentObject = new JSONObject(commentResult.getResponseBody());
+		JSONArray responseCommentArray = responseCommentObject.getJSONArray("comments");
+
+		JSONArray commentArray = new JSONArray();
+		for (int i = 0; i < responseCommentArray.length(); i++) {
 			JSONObject obj = new JSONObject();
-			JSONArray tags =  responseTicketArray.getJSONObject(i).getJSONArray("tags");
-			//only get plugin tickets
-			if (tags.toString().contains("plugin")) {
-				String subject = responseTicketArray.getJSONObject(i).getString("subject");
-				String description = responseTicketArray.getJSONObject(i).getString("description");
-				Integer requester_id = responseTicketArray.getJSONObject(i).getInt("requester_id");
-				obj.put("subject", subject);
-				obj.put("description", description);
-				obj.put("requester_id", requester_id);
-			}
-			tickets.put(obj);
+			JSONObject theComment = responseCommentArray.getJSONObject(i);
+			String body = theComment.getString("body");
+			//Integer author_id = theComment.getInt("author_id");
+			obj.put("body", body);
+			//obj.put("author_id", author_id);
+
+			commentArray.put(obj);
 		}
-		System.out.printf( "JSON: %s", tickets.toString(2) );
+
+		return commentArray;
+
+	}
+
+	private void postTickets(JSONArray tickets) {
+		System.out.println("IMPORTING TICKETS...");
+
+		String ghosteryZendeskAPI = "https://ghosterysupport.zendesk.com/api/v2/imports/tickets.json";
+
+		for (int i = 0; i < tickets.length(); i++) {
+			String body = "{\"ticket\":" + tickets.get(i).toString() + "}";
+
+			RequestBuilder builder = new RequestBuilder("POST");
+			Request request = builder.setUrl(ghosteryZendeskAPI)
+					.addHeader("Content-Type", "application/json")
+					.addHeader("Accept", "application/json")
+					.addHeader("Authorization", "Basic " + ghosteryCreds)
+					.setBody(body)
+					.build();
+
+			Future<Response> future = this.doAsyncRequest(request);
+			Response result;
+			try {
+				result = future.get(15, TimeUnit.SECONDS);
+				System.out.println(result.getStatusCode() + " " + result.getStatusText());
+			} catch (Exception e) {
+				e.printStackTrace();
+				System.out.printf("Ticket not uploaded: %s", tickets.get(i).toString());
+				future.cancel(true);
+			}
+		}
+	}
+
+	private HashMap<String, Integer> postUsers(JSONArray users) {
+		System.out.println("IMPORTING USERS...");
+
+		String ghosteryZendeskAPI = "https://ghosterysupport.zendesk.com/api/v2/users.json";
+		HashMap<String, Integer> userMap= new HashMap<>();
+
+		for (int i = 0; i < users.length(); i++) {
+			JSONObject user = users.getJSONObject(i);
+			JSONObject userOutput = new JSONObject();
+			userOutput.put("name", user.getString("name"));
+			userOutput.put("email", user.getString("email"));
+			userOutput.put("role", user.getString("role"));
+			userOutput.put("verified", true); //prevent sending verification email
+
+			String body = "{\"user\":" + userOutput.toString() + "}";
+
+			RequestBuilder builder = new RequestBuilder("POST");
+			Request request = builder.setUrl(ghosteryZendeskAPI)
+					.addHeader("Content-Type", "application/json")
+					.addHeader("Accept", "application/json")
+					.addHeader("Authorization", "Basic " + ghosteryCreds)
+					.setBody(body)
+					.build();
+
+			Future<Response> future = this.doAsyncRequest(request);
+			Response result;
+			try {
+				result = future.get(15, TimeUnit.SECONDS);
+				JSONObject responseObject = new JSONObject(result.getResponseBody());
+				userMap.put(user.getString("email"), responseObject.getJSONObject("user").getInt("id"));
+				System.out.println(result.getStatusCode() + " " + result.getStatusText() + " " + userMap.toString());
+			} catch (Exception e) {
+				e.printStackTrace();
+				System.out.printf("User not uploaded: %s", userOutput.toString());
+				future.cancel(true);
+			}
+		}
+		return userMap;
 	}
 
 	private Future<Response> doAsyncRequest(Request request) {
@@ -169,6 +281,7 @@ public class ZendeskMigration {
 		return client.executeRequest(request, new AsyncCompletionHandler<Response>() {
 			@Override
 			public Response onCompleted(Response response) throws Exception{
+				//System.out.println(response);
 				return response;
 			}
 
