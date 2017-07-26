@@ -22,111 +22,20 @@ import static com.ghostery.zendeskmigration.Constants.*;
  * See https://www.ghostery.com/eula for license.
  */
 
-public class ZendeskMigration {
+public class ZendeskMigration implements AsyncRequest {
 
 	private final String evidonCreds = Base64.getEncoder().encodeToString((EVIDON_USER + "/token:" + EVIDON_TOKEN).getBytes(StandardCharsets.UTF_8));
 	private final String ghosteryCreds = Base64.getEncoder().encodeToString((GHOSTERY_USER + "/token:" + GHOSTERY_TOKEN).getBytes(StandardCharsets.UTF_8));
 	private HashMap<Integer, Long> userIDs = new HashMap<>();
-	private HashMap<Integer, Long> sectionIDs = new HashMap<>();
 
-	public ZendeskMigration() throws ExecutionException, InterruptedException {
-		this.mapSectionIDs();
-		//this.getContent("categories");
-		//this.getContent("sections");
-		//this.getContent("articles");
+	private ZendeskMigration() throws ExecutionException, InterruptedException {
+//		HelpCenter hc = new HelpCenter();
+//		hc.getHelpCenterContent("categories");
+//		hc.getHelpCenterContent("sections");
+//		hc.getHelpCenterContent("articles");
+
+		//this.getTicket(10629);
 		this.getTickets();
-//		this.getTicket(10629);
-	}
-
-	/**
-	 * Fetch from article, section or category API
-	 * @param type  articles, sections or categories
-	 * @throws ExecutionException
-	 * @throws InterruptedException
-	 */
-	private void getContent(String type) throws ExecutionException, InterruptedException {
-		System.out.println("FETCHING " + type.toUpperCase() + "...");
-		String evidonHelpCenterURL = "https://ghostery.zendesk.com/api/v2/help_center/en-us/";
-
-		RequestBuilder builder = new RequestBuilder("GET");
-		Request request = builder.setUrl(evidonHelpCenterURL + type + ".json?per_page=100") //&page=2
-				.addHeader("Accept","application/json")
-				.addHeader("Authorization", "Basic " + evidonCreds)
-				.build();
-
-		Future<Response> future = this.doAsyncRequest(request);
-		//block execution until future resolves
-		Response result = future.get();
-		System.out.println("Future done? " + future.isDone());
-
-		//Convert to JSON Object and extract data
-		JSONObject responseObject = new JSONObject(result.getResponseBody());
-		JSONArray responseArray = responseObject.getJSONArray(type);
-
-		JSONArray content = new JSONArray();
-		for (int i = 0; i < responseArray.length(); i++) {
-			JSONObject obj = new JSONObject();
-			if (type.equals("articles")) {
-				String title = responseArray.getJSONObject(i).getString("title");
-				String body = responseArray.getJSONObject(i).getString("body");
-				Integer section_id = responseArray.getJSONObject(i).getInt("section_id");
-				obj.put("title", title);
-				obj.put("body", body);
-				obj.put("section_id", section_id);
-				obj.put("comments_disabled", true);
-			} else {
-				String name = responseArray.getJSONObject(i).getString("name");
-				String description = responseArray.getJSONObject(i).getString("description");
-				obj.put("name", name);
-				obj.put("description", description);
-			}
-			content.put(obj);
-		}
-
-		System.out.printf( "JSON: %s", content.toString(2) );
-
-		this.postContent(type, content);
-	}
-
-	/**
-	 * Post to article, section or category API
-	 * @param type  articles, sections or categories
-	 * @param content  from fetch
-	 * @throws ExecutionException
-	 * @throws InterruptedException
-	 */
-	private void postContent(String type, JSONArray content) throws ExecutionException, InterruptedException {
-		System.out.println("BUILDING " + type.toUpperCase() + "...");
-
-		String ghosteryHelpCenterURL = "https://ghosterysupport.zendesk.com/api/v2/help_center/en-us/";
-		String jsonType = (type.equals("sections")) ? "section" : (type.equals("articles")) ? "article" : "category";
-
-		for (int i = 0; i < content.length(); i++) {
-			String body = "{\"" + jsonType + "\":" + content.get(i).toString() + "}";
-			//Map old section IDs to new for articles. Sections all go under the default category.
-			String urlType = (type.equals("sections")) ? "categories/115000106314/" + type :
-					(type.equals("articles")) ? "sections/"+ sectionIDs.get(content.getJSONObject(i).getInt("section_id"))+ "/" + type : type;
-
-			RequestBuilder builder = new RequestBuilder("POST");
-			Request request = builder.setUrl(ghosteryHelpCenterURL + urlType + ".json")
-					.addHeader("Content-Type", "application/json")
-					.addHeader("Accept", "application/json")
-					.addHeader("Authorization", "Basic " + ghosteryCreds)
-					.setBody(body)
-					.build();
-
-			Future<Response> future = this.doAsyncRequest(request);
-			Response result;
-			try {
-				result = future.get(15, TimeUnit.SECONDS);
-				//TODO: Save section_id and category_id to HashMap
-				System.out.println(result.getStatusCode() + " " + result.getStatusText());
-			} catch (Exception e) {
-				e.printStackTrace();
-				System.out.printf("Article not uploaded: %s", content.get(i).toString());
-				future.cancel(true);
-			}
-		}
 	}
 
 	/**
@@ -136,11 +45,11 @@ public class ZendeskMigration {
 	 * @throws InterruptedException
 	 */
 	private void getTicket(Integer ticketID) throws ExecutionException, InterruptedException {
-		System.out.println("FETCHING TICKET...");
+		System.out.println("FETCHING TICKET " + ticketID + "...");
 		String evidonZendeskAPI = "https://ghostery.zendesk.com/api/v2/tickets/" + ticketID + ".json?include=users,comment_count";
 
 		RequestBuilder builder = new RequestBuilder("GET");
-		Request request = builder.setUrl(evidonZendeskAPI) //&page=2
+		Request request = builder.setUrl(evidonZendeskAPI)
 				.addHeader("Accept","application/json")
 				.addHeader("Authorization", "Basic " + evidonCreds)
 				.build();
@@ -156,29 +65,28 @@ public class ZendeskMigration {
 		//map the new user IDs to the ticket comments. First user is the requester.
 		this.postUsers(responseUserArray);
 
-		JSONArray tickets = new JSONArray();
+		JSONArray ticket = new JSONArray();
+		JSONObject obj = new JSONObject();
 
-			JSONObject obj = new JSONObject();
-
-			JSONArray tags =  theTicket.getJSONArray("tags");
-			//only get plugin tickets
-			if (tags.toString().contains("plugin")) {
-				obj.put("subject", theTicket.getString("subject"));
-				obj.put("requester_id", userIDs.get(theTicket.getInt("requester_id"))); //get new userID from map
-				obj.put("status", (theTicket.getString("status").equals("closed")) ? "solved" : theTicket.getString("status")); //reopen the ticket if it's closed, so we can update it below
-				obj.put("created_at", theTicket.getString("created_at"));
-				obj.put("updated_at", theTicket.getString("updated_at"));
-				obj.put("legacyID", theTicket.getInt("id")); //passed to postTickets and then removed before POST
-				if (theTicket.get("comment_count") != null) {
-					//we can only post 1 comment to a ticket at a time. Here, add the first comment (user request)
-					obj.put("comment", this.getTicketComments(theTicket.getInt("id")).getJSONObject(0));
-				}
+		JSONArray tags =  theTicket.getJSONArray("tags");
+		//only get plugin tickets
+		if (tags.toString().contains("plugin")) {
+			obj.put("subject", theTicket.getString("subject"));
+			obj.put("requester_id", userIDs.get(theTicket.getInt("requester_id"))); //get new userID from map
+			obj.put("status", (theTicket.getString("status").equals("closed")) ? "solved" : theTicket.getString("status")); //reopen the ticket if it's closed, so we can update it below
+			obj.put("created_at", theTicket.getString("created_at"));
+			obj.put("updated_at", theTicket.getString("updated_at"));
+			obj.put("legacyID", theTicket.getInt("id")); //passed to updateTicketComments and then removed before POST
+			if (theTicket.get("comment_count") != null) {
+				//we can only post 1 comment to a ticket at a time. Here, add the first comment (user request)
+				obj.put("comment", this.getTicketComments(theTicket.getInt("id")).getJSONObject(0));
 			}
-			tickets.put(obj);
+		}
+		ticket.put(obj);
 
-		System.out.printf( "TICKET: %s", tickets.toString(2) );
+		System.out.printf( "TICKET: %s", ticket.toString(2) );
 
-		this.postTickets(tickets);
+		this.postTicket(ticket);
 	}
 
 	/**
@@ -188,10 +96,10 @@ public class ZendeskMigration {
 	 */
 	private void getTickets() throws ExecutionException, InterruptedException {
 		System.out.println("FETCHING TICKETS...");
-		String evidonZendeskAPI = "https://ghostery.zendesk.com/api/v2/tickets.json?include=users,comment_count&per_page=20&page=3";
+		String evidonZendeskAPI = "https://ghostery.zendesk.com/api/v2/tickets.json?include=users,comment_count&per_page=100";//&page=2
 
 		RequestBuilder builder = new RequestBuilder("GET");
-		Request request = builder.setUrl(evidonZendeskAPI) //&page=2
+		Request request = builder.setUrl(evidonZendeskAPI)
 				.addHeader("Accept","application/json")
 				.addHeader("Authorization", "Basic " + evidonCreds)
 				.build();
@@ -217,20 +125,20 @@ public class ZendeskMigration {
 			if (tags.toString().contains("plugin")) {
 				obj.put("subject", theTicket.getString("subject"));
 				obj.put("requester_id", userIDs.get(theTicket.getInt("requester_id"))); //get new userID from map
-				obj.put("status", (theTicket.getString("status").equals("closed")) ? "solved" : theTicket.getString("status")); //reopen the ticket if it's closed, so we can update it below
+				obj.put("assignee_id", userIDs.get(theTicket.getInt("assignee_id")));
+				obj.put("status", theTicket.getString("status"));
 				obj.put("created_at", theTicket.getString("created_at"));
 				obj.put("updated_at", theTicket.getString("updated_at"));
-				obj.put("legacyID", theTicket.getInt("id")); //passed to postTickets and then removed before POST
 				if (theTicket.get("comment_count") != null) {
-					//we can only post 1 comment to a ticket at a time. Here, add the first comment (user request)
-					obj.put("comment", this.getTicketComments(theTicket.getInt("id")).getJSONObject(0));
+					//create_many.json endpoint allows for comments[]
+					obj.put("comments", this.getTicketComments(theTicket.getInt("id")));
 				}
 			}
 			tickets.put(obj);
 		}
 		System.out.printf( "TICKETS: %s", tickets.toString(2) );
 
-		this.postTickets(tickets);
+		this.postManyTickets(tickets);
 	}
 
 	/**
@@ -254,12 +162,14 @@ public class ZendeskMigration {
 		JSONArray responseCommentArray = responseCommentObject.getJSONArray("comments");
 
 		JSONArray commentArray = new JSONArray();
+		//build new JSONArray for output
 		for (int i = 0; i < responseCommentArray.length(); i++) {
 			JSONObject obj = new JSONObject();
 			JSONObject theComment = responseCommentArray.getJSONObject(i);
 			obj.put("body", StringEscapeUtils.escapeHtml4(theComment.getString("body")));
 			obj.put("author_id", userIDs.get(theComment.getInt("author_id")));
 			obj.put("created_at", theComment.getString("created_at"));
+			obj.put("public", theComment.getBoolean("public"));
 
 			commentArray.put(obj);
 		}
@@ -268,10 +178,10 @@ public class ZendeskMigration {
 	}
 
 	/**
-	 * Post an array of tickets to Zendesk.
+	 * Post an array of tickets to Zendesk one-by-one
 	 * @param tickets
 	 */
-	private void postTickets(JSONArray tickets) {
+	private void postTicket(JSONArray tickets) {
 		System.out.println("IMPORTING TICKETS...");
 
 		String ghosteryZendeskAPI = "https://ghosterysupport.zendesk.com/api/v2/imports/tickets.json";
@@ -308,6 +218,40 @@ public class ZendeskMigration {
 				future.cancel(true);
 			}
 		}
+	}
+
+	/**
+	 * Batch post array of 100 tickets
+	 * @param tickets
+	 */
+	private void postManyTickets(JSONArray tickets) {
+		System.out.println("BULK IMPORTING TICKETS...");
+
+		String ghosteryZendeskAPI = "https://ghosterysupport.zendesk.com/api/v2/imports/tickets/create_many.json";
+
+		String body = "{\"tickets\":" + tickets.toString() + "}";
+
+		RequestBuilder builder = new RequestBuilder("POST");
+		Request request = builder.setUrl(ghosteryZendeskAPI)
+				.addHeader("Content-Type", "application/json")
+				.addHeader("Accept", "application/json")
+				.addHeader("Authorization", "Basic " + ghosteryCreds)
+				.setBody(body)
+				.build();
+
+		Future<Response> future = this.doAsyncRequest(request);
+		Response result;
+		try {
+			result = future.get(15, TimeUnit.SECONDS);
+			if (result.getStatusCode() <= 201) {
+				System.out.println("Batch Post Tickets: "  + result.getStatusCode() + " " + result.getStatusText());
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			System.out.println("Ticket batch not uploaded");
+			future.cancel(true);
+		}
+
 	}
 
 	/**
@@ -395,57 +339,6 @@ public class ZendeskMigration {
 				future.cancel(true);
 			}
 		}
-	}
-
-	/**
-	 * Utility method to execute AsyncHttpClient
-	 * @param request
-	 * @return
-	 */
-	private Future<Response> doAsyncRequest(Request request) {
-		AsyncHttpClient client = new DefaultAsyncHttpClient();
-		//returns Future<response>
-		return client.executeRequest(request, new AsyncCompletionHandler<Response>() {
-			@Override
-			public Response onCompleted(Response response) throws Exception{
-				//System.out.println(response.getStatusCode());
-				//System.out.println(response.getResponseBody());
-				return response;
-			}
-
-			@Override
-			public void onThrowable(Throwable t){
-				t.printStackTrace();
-			}
-		});
-	}
-
-	/**
-	 * Map old / new section IDs
-	 */
-	private void mapSectionIDs() {
-		//API won't query sections without articles, so we have to map them manually (old, new)
-		sectionIDs.put(201819186, 115000206753L);
-		sectionIDs.put(201089089, 115000211754L);
-		sectionIDs.put(201164365, 115000211774L);
-		sectionIDs.put(202026926, 115000206773L);
-		sectionIDs.put(202090123, 115000211794L);
-		sectionIDs.put(202026946, 115000211814L);
-		sectionIDs.put(201809893, 115000211834L);
-		sectionIDs.put(201809913, 115000206793L);
-		sectionIDs.put(202089523, 115000206813L);
-		sectionIDs.put(201819206, 115000206833L);
-		sectionIDs.put(202089263, 115000211854L);
-		sectionIDs.put(202028303, 115000211874L);
-		sectionIDs.put(201819176, 115000206853L);
-		sectionIDs.put(202027006, 115000211894L);
-		sectionIDs.put(201809903, 115000211914L);
-		sectionIDs.put(202707966, 115000211934L);
-		sectionIDs.put(202085046, 115000211954L);
-		sectionIDs.put(201819196, 115000211974L);
-		sectionIDs.put(202090483, 115000206873L);
-		sectionIDs.put(201819226, 115000211994L);
-		sectionIDs.put(201819216, 115000206893L);
 	}
 
 	public static void main(String[] args) {
