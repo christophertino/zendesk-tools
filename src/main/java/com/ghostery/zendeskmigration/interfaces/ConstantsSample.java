@@ -1,4 +1,4 @@
-package com.ghostery.zendeskmigration;
+package com.ghostery.zendeskmigration.interfaces;
 
 /**
  * zendesk-migration

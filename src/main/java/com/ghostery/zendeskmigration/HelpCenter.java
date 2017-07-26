@@ -1,5 +1,6 @@
 package com.ghostery.zendeskmigration;
 
+import com.ghostery.zendeskmigration.interfaces.AsyncRequest;
 import org.asynchttpclient.Request;
 import org.asynchttpclient.RequestBuilder;
 import org.asynchttpclient.Response;
@@ -13,7 +14,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
-import static com.ghostery.zendeskmigration.Constants.*;
+import static com.ghostery.zendeskmigration.interfaces.Constants.*;
 
 /**
  * Zendesk Migration
