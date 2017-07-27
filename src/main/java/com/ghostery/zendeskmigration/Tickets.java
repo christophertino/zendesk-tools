@@ -6,14 +6,13 @@ import org.asynchttpclient.RequestBuilder;
 import org.asynchttpclient.Response;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import sun.security.krb5.internal.Ticket;
 
-import java.nio.charset.StandardCharsets;
-import java.util.Base64;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
-import static com.ghostery.zendeskmigration.interfaces.Constants.*;
+import static com.ghostery.zendeskmigration.Users.userIDs;
 
 /**
  * Zendesk Migration
@@ -26,13 +25,17 @@ import static com.ghostery.zendeskmigration.interfaces.Constants.*;
 
 public class Tickets implements AsyncRequest {
 
-	private final String evidonCreds;
-	private final String ghosteryCreds;
+	private String subject;
+	private Integer requester_id;
+	private Integer assignee_id;
+	private String status;
+	private String created_at;
+	private String updated_at;
+	private Integer legacyID;
+	private JSONArray comment;
+	private JSONArray comments;
 
-	public Tickets() {
-		this.evidonCreds = Base64.getEncoder().encodeToString((EVIDON_USER + "/token:" + EVIDON_TOKEN).getBytes(StandardCharsets.UTF_8));
-		this.ghosteryCreds = Base64.getEncoder().encodeToString((GHOSTERY_USER + "/token:" + GHOSTERY_TOKEN).getBytes(StandardCharsets.UTF_8));
-	}
+	public Tickets() {}
 
 	/**
 	 * Retrieve and Post a single ticket by ID
@@ -40,16 +43,11 @@ public class Tickets implements AsyncRequest {
 	 * @throws ExecutionException
 	 * @throws InterruptedException
 	 */
-	private void getTicket(Integer ticketID) throws ExecutionException, InterruptedException {
+	void getTicket(Integer ticketID) throws ExecutionException, InterruptedException {
 		System.out.println("FETCHING TICKET " + ticketID + "...");
 		String evidonZendeskAPI = "https://ghostery.zendesk.com/api/v2/tickets/" + ticketID + ".json?include=users,comment_count";
 
-		RequestBuilder builder = new RequestBuilder("GET");
-		Request request = builder.setUrl(evidonZendeskAPI)
-				.addHeader("Accept","application/json")
-				.addHeader("Authorization", "Basic " + this.evidonCreds)
-				.build();
-
+		Request request = this.buildEvidonRequest(evidonZendeskAPI);
 		Future<Response> future = this.doAsyncRequest(request);
 		Response result = future.get();
 
@@ -61,12 +59,15 @@ public class Tickets implements AsyncRequest {
 		//map the new user IDs to the ticket comments. First user is the requester.
 		this.postUsers(responseUserArray);
 
-		JSONArray ticket = new JSONArray();
-		JSONObject obj = new JSONObject();
-
+		JSONArray ticketArray = new JSONArray();
 		JSONArray tags =  theTicket.getJSONArray("tags");
+
+		//Users user = new Users();
+		Tickets ticket = new Tickets();
+
 		//only get plugin tickets
 		if (tags.toString().contains("plugin")) {
+			user.setName();
 			obj.put("subject", theTicket.getString("subject"));
 			obj.put("requester_id", userIDs.get(theTicket.getInt("requester_id"))); //get new userID from map
 			obj.put("status", (theTicket.getString("status").equals("closed")) ? "solved" : theTicket.getString("status")); //reopen the ticket if it's closed, so we can update it below
@@ -90,7 +91,7 @@ public class Tickets implements AsyncRequest {
 	 * @throws ExecutionException
 	 * @throws InterruptedException
 	 */
-	private void getTickets() throws ExecutionException, InterruptedException {
+	void getTickets() throws ExecutionException, InterruptedException {
 		System.out.println("FETCHING TICKETS...");
 		String evidonZendeskAPI = "https://ghostery.zendesk.com/api/v2/tickets.json?include=users,comment_count&per_page=100";//&page=2
 

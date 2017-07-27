@@ -1,8 +1,11 @@
 package com.ghostery.zendeskmigration.interfaces;
 
 import org.asynchttpclient.*;
-
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.concurrent.Future;
+
+import static com.ghostery.zendeskmigration.interfaces.Constants.*;
 
 /**
  * Zendesk Migration
@@ -14,6 +17,10 @@ import java.util.concurrent.Future;
  */
 
 public interface AsyncRequest {
+
+	String evidonCreds = Base64.getEncoder().encodeToString((EVIDON_USER + "/token:" + EVIDON_TOKEN).getBytes(StandardCharsets.UTF_8));
+	String ghosteryCreds = Base64.getEncoder().encodeToString((GHOSTERY_USER + "/token:" + GHOSTERY_TOKEN).getBytes(StandardCharsets.UTF_8));
+
 	/**
 	 * Utility method to execute AsyncHttpClient
 	 * @param request
@@ -36,4 +43,23 @@ public interface AsyncRequest {
 			}
 		});
 	}
+
+	default Request buildEvidonRequest(String url) {
+		RequestBuilder builder = new RequestBuilder("GET");
+		return builder.setUrl(url)
+				.addHeader("Accept","application/json")
+				.addHeader("Authorization", "Basic " + this.evidonCreds)
+				.build();
+	}
+
+	default Request buildGhosteryRequest(String body, String url) {
+		RequestBuilder builder = new RequestBuilder("POST");
+		return builder.setUrl(url)
+				.addHeader("Content-Type", "application/json")
+				.addHeader("Accept", "application/json")
+				.addHeader("Authorization", "Basic " + this.ghosteryCreds)
+				.setBody(body)
+				.build();
+	}
+
 }

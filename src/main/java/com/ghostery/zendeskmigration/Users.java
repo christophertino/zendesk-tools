@@ -8,6 +8,7 @@ import org.asynchttpclient.Response;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.util.HashMap;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
@@ -21,6 +22,16 @@ import java.util.concurrent.TimeUnit;
  */
 
 public class Users implements AsyncRequest {
+
+	static HashMap<Integer, Long> userIDs = new HashMap<>();
+	private String name;
+	private String email;
+	private String role;
+	private Boolean verified;
+
+	public Users() {
+
+	}
 
 	/**
 	 * Post an array of Users to Zendesk
@@ -69,5 +80,21 @@ public class Users implements AsyncRequest {
 				future.cancel(true);
 			}
 		}
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public void setEmail(String email) {
+		this.email = email;
+	}
+
+	public void setRole(String role) {
+		this.role = role;
+	}
+
+	public void setVerified(Boolean verified) {
+		this.verified = verified;
 	}
 }

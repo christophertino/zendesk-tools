@@ -6,15 +6,10 @@ import org.asynchttpclient.RequestBuilder;
 import org.asynchttpclient.Response;
 import org.json.JSONArray;
 import org.json.JSONObject;
-
-import java.nio.charset.StandardCharsets;
-import java.util.Base64;
 import java.util.HashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-
-import static com.ghostery.zendeskmigration.interfaces.Constants.*;
 
 /**
  * Zendesk Migration
@@ -26,13 +21,9 @@ import static com.ghostery.zendeskmigration.interfaces.Constants.*;
  */
 public class HelpCenter implements AsyncRequest {
 
-	private final String evidonCreds;
-	private final String ghosteryCreds;
 	private HashMap<Integer, Long> sectionIDs = new HashMap<>();
 
 	public HelpCenter() {
-		this.evidonCreds = Base64.getEncoder().encodeToString((EVIDON_USER + "/token:" + EVIDON_TOKEN).getBytes(StandardCharsets.UTF_8));
-		this.ghosteryCreds = Base64.getEncoder().encodeToString((GHOSTERY_USER + "/token:" + GHOSTERY_TOKEN).getBytes(StandardCharsets.UTF_8));
 		this.mapSectionIDs();
 	}
 
