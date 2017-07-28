@@ -112,7 +112,7 @@ public class Ticket implements AsyncRequest {
 	 */
 	protected static ArrayList<Ticket> getTickets() throws ExecutionException, InterruptedException {
 		System.out.println("GETTING TICKETS...");
-		String evidonZendeskAPI = "https://ghostery.zendesk.com/api/v2/tickets.json?include=users,comment_count&per_page=100";//&page=2
+		String evidonZendeskAPI = "https://ghostery.zendesk.com/api/v2/tickets.json?include=users,comment_count&per_page=1";//&page=2
 
 		//create the HTTP request
 		Request request = AsyncRequest.buildEvidonRequest(evidonZendeskAPI);
@@ -138,7 +138,7 @@ public class Ticket implements AsyncRequest {
 	 * Batch post array of up to 100 tickets
 	 * @param tickets
 	 */
-	protected static void postManyTickets(ArrayList<Ticket> tickets) {
+	protected static void postTickets(ArrayList<Ticket> tickets) {
 		System.out.println("BULK IMPORTING TICKETS...");
 
 		String ghosteryZendeskAPI = "https://ghosterysupport.zendesk.com/api/v2/imports/tickets/create_many.json";
@@ -226,7 +226,7 @@ public class Ticket implements AsyncRequest {
 	@Override
 	public String toString(){
 		Gson gson = new Gson();
-		return gson.toJson(this);
+		return gson.toJson(this).replace("is_public", "public"); //for Comments
 	}
 
 	public void setSubject(String subject) {

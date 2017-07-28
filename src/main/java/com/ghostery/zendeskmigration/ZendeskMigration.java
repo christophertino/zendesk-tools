@@ -26,7 +26,7 @@ public class ZendeskMigration implements AsyncRequest {
 //		Ticket.postTicket(ticket);
 
 		ArrayList<Ticket> tickets = Ticket.getTickets();
-		Ticket.postManyTickets(tickets);
+		//Ticket.postTickets(tickets);
 	}
 
 	public static void main(String[] args) {
