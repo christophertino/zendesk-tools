@@ -26,7 +26,7 @@ public interface AsyncRequest {
 	 * @param request
 	 * @return
 	 */
-	default Future<Response> doAsyncRequest(Request request) {
+	static Future<Response> doAsyncRequest(Request request) {
 		AsyncHttpClient client = new DefaultAsyncHttpClient();
 		//returns Future<response>
 		return client.executeRequest(request, new AsyncCompletionHandler<Response>() {
@@ -44,20 +44,20 @@ public interface AsyncRequest {
 		});
 	}
 
-	default Request buildEvidonRequest(String url) {
+	static Request buildEvidonRequest(String url) {
 		RequestBuilder builder = new RequestBuilder("GET");
 		return builder.setUrl(url)
 				.addHeader("Accept","application/json")
-				.addHeader("Authorization", "Basic " + this.evidonCreds)
+				.addHeader("Authorization", "Basic " + evidonCreds)
 				.build();
 	}
 
-	default Request buildGhosteryRequest(String body, String url) {
+	static Request buildGhosteryRequest(String body, String url) {
 		RequestBuilder builder = new RequestBuilder("POST");
 		return builder.setUrl(url)
 				.addHeader("Content-Type", "application/json")
 				.addHeader("Accept", "application/json")
-				.addHeader("Authorization", "Basic " + this.ghosteryCreds)
+				.addHeader("Authorization", "Basic " + ghosteryCreds)
 				.setBody(body)
 				.build();
 	}

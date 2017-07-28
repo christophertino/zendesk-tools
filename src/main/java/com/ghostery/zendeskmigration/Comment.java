@@ -21,7 +21,7 @@ import java.util.concurrent.TimeUnit;
  * See https://www.ghostery.com/eula for license.
  */
 
-public class Comments implements AsyncRequest {
+public class Comment implements AsyncRequest {
 
 	/**
 	 * Get an array of all comments attached to a ticket
@@ -30,14 +30,14 @@ public class Comments implements AsyncRequest {
 	 * @throws ExecutionException
 	 * @throws InterruptedException
 	 */
-	private JSONArray getTicketComments(Integer ticketID) throws ExecutionException, InterruptedException {
+	protected static JSONArray getTicketComments(Integer ticketID) throws ExecutionException, InterruptedException {
 		System.out.println("FETCHING COMMENTS...");
 		RequestBuilder commentBuild = new RequestBuilder("GET");
 		Request commentRequest = commentBuild.setUrl("https://ghostery.zendesk.com/api/v2/tickets/" + ticketID + "/comments.json")
 				.addHeader("Accept","application/json")
 				.addHeader("Authorization", "Basic " + evidonCreds)
 				.build();
-		Future<Response> commentFuture = this.doAsyncRequest(commentRequest);
+		Future<Response> commentFuture = AsyncRequest.doAsyncRequest(commentRequest);
 		Response commentResult = commentFuture.get();
 
 		JSONObject responseCommentObject = new JSONObject(commentResult.getResponseBody());
@@ -49,7 +49,7 @@ public class Comments implements AsyncRequest {
 			JSONObject obj = new JSONObject();
 			JSONObject theComment = responseCommentArray.getJSONObject(i);
 			obj.put("body", StringEscapeUtils.escapeHtml4(theComment.getString("body")));
-			obj.put("author_id", userIDs.get(theComment.getInt("author_id")));
+			//obj.put("author_id", userIDs.get(theComment.getInt("author_id")));
 			obj.put("created_at", theComment.getString("created_at"));
 			obj.put("public", theComment.getBoolean("public"));
 
@@ -84,7 +84,7 @@ public class Comments implements AsyncRequest {
 					.setBody(body)
 					.build();
 
-			Future<Response> future = this.doAsyncRequest(request);
+			Future<Response> future = AsyncRequest.doAsyncRequest(request);
 			Response result;
 			try {
 				result = future.get(15, TimeUnit.SECONDS);

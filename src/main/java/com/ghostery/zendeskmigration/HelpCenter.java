@@ -43,7 +43,7 @@ public class HelpCenter implements AsyncRequest {
 				.addHeader("Authorization", "Basic " + this.evidonCreds)
 				.build();
 
-		Future<Response> future = this.doAsyncRequest(request);
+		Future<Response> future = AsyncRequest.doAsyncRequest(request);
 		//block execution until future resolves
 		Response result = future.get();
 		System.out.println("Future done? " + future.isDone());
@@ -104,7 +104,7 @@ public class HelpCenter implements AsyncRequest {
 					.setBody(body)
 					.build();
 
-			Future<Response> future = this.doAsyncRequest(request);
+			Future<Response> future = AsyncRequest.doAsyncRequest(request);
 			Response result;
 			try {
 				result = future.get(15, TimeUnit.SECONDS);

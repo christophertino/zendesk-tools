@@ -2,7 +2,6 @@ package com.ghostery.zendeskmigration;
 
 import com.ghostery.zendeskmigration.interfaces.AsyncRequest;
 import java.util.concurrent.ExecutionException;
-import com.ghostery.zendeskmigration.Tickets;
 
 /**
  * Zendesk Migration
@@ -21,7 +20,7 @@ public class ZendeskMigration implements AsyncRequest {
 //		hc.getHelpCenterContent("sections");
 //		hc.getHelpCenterContent("articles");
 
-		getTicket(10629);
+		Ticket.getTicket(10629);
 		//this.getTickets();
 	}
 
