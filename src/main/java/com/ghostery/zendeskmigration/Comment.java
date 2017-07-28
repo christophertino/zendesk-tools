@@ -1,13 +1,14 @@
 package com.ghostery.zendeskmigration;
 
 import com.ghostery.zendeskmigration.interfaces.AsyncRequest;
+import com.google.gson.Gson;
 import org.apache.commons.text.StringEscapeUtils;
 import org.asynchttpclient.Request;
-import org.asynchttpclient.RequestBuilder;
 import org.asynchttpclient.Response;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -23,40 +24,56 @@ import java.util.concurrent.TimeUnit;
 
 public class Comment implements AsyncRequest {
 
+	private String body;
+	private Long author_id;
+	private String created_at;
+	private Boolean is_public;
+
+	public Comment() {}
+
 	/**
-	 * Get an array of all comments attached to a ticket
+	 * Get an array of all Comments attached to a ticket
 	 * @param ticketID      from Evidon account
 	 * @return
 	 * @throws ExecutionException
 	 * @throws InterruptedException
 	 */
-	protected static JSONArray getTicketComments(Integer ticketID) throws ExecutionException, InterruptedException {
-		System.out.println("FETCHING COMMENTS...");
-		RequestBuilder commentBuild = new RequestBuilder("GET");
-		Request commentRequest = commentBuild.setUrl("https://ghostery.zendesk.com/api/v2/tickets/" + ticketID + "/comments.json")
-				.addHeader("Accept","application/json")
-				.addHeader("Authorization", "Basic " + evidonCreds)
-				.build();
-		Future<Response> commentFuture = AsyncRequest.doAsyncRequest(commentRequest);
-		Response commentResult = commentFuture.get();
+	protected static ArrayList<Comment> getTicketComments(Integer ticketID) throws ExecutionException, InterruptedException {
+		System.out.println("GETTING COMMENTS FOR TICKET " + ticketID + "...");
+		String evidonZendeskAPI = "https://ghostery.zendesk.com/api/v2/tickets/" + ticketID + "/comments.json";
 
-		JSONObject responseCommentObject = new JSONObject(commentResult.getResponseBody());
+		//create the HTTP request
+		Request request = AsyncRequest.buildEvidonRequest(evidonZendeskAPI);
+		Future<Response> future = AsyncRequest.doAsyncRequest(request);
+		Response result = future.get();
+
+		//Convert response to JSON Object and extract comments
+		JSONObject responseCommentObject = new JSONObject(result.getResponseBody());
 		JSONArray responseCommentArray = responseCommentObject.getJSONArray("comments");
 
-		JSONArray commentArray = new JSONArray();
-		//build new JSONArray for output
-		for (int i = 0; i < responseCommentArray.length(); i++) {
-			JSONObject obj = new JSONObject();
-			JSONObject theComment = responseCommentArray.getJSONObject(i);
-			obj.put("body", StringEscapeUtils.escapeHtml4(theComment.getString("body")));
-			//obj.put("author_id", userIDs.get(theComment.getInt("author_id")));
-			obj.put("created_at", theComment.getString("created_at"));
-			obj.put("public", theComment.getBoolean("public"));
+		//build new Comments
+		return buildComments(responseCommentArray);
+	}
 
-			commentArray.put(obj);
+	/**
+	 * Factory function to generate Comments from JSONArray
+	 * @param comments
+	 * @return
+	 */
+	private static ArrayList<Comment> buildComments(JSONArray comments) {
+		ArrayList<Comment> output = new ArrayList<>();
+		for (int i = 0; i < comments.length(); i++) {
+			JSONObject comment = comments.getJSONObject(i);
+			Comment c = new Comment();
+
+			c.setBody(StringEscapeUtils.escapeHtml4(comment.getString("body")));
+			c.setAuthor_id(User.userIDs.get(comment.getInt("author_id")));
+			c.setCreated_at(comment.getString("created_at"));
+			c.setIs_public(comment.getBoolean("public"));
+
+			output.add(c);
 		}
-
-		return commentArray;
+		return output;
 	}
 
 	/**
@@ -66,34 +83,51 @@ public class Comment implements AsyncRequest {
 	 * @throws ExecutionException
 	 * @throws InterruptedException
 	 */
-	private void updateTicketComments(Integer newTicketID, Integer oldTicketID) throws ExecutionException, InterruptedException {
+	protected static void updateTicketComments(Integer newTicketID, Integer oldTicketID) throws ExecutionException, InterruptedException {
 		System.out.println("UPDATING TICKET COMMENTS...");
 
 		String ghosteryZendeskAPI = "https://ghosterysupport.zendesk.com/api/v2/tickets/" + newTicketID + ".json";
 
-		JSONArray ticketComments = this.getTicketComments(oldTicketID);
+		ArrayList<Comment> comments = getTicketComments(oldTicketID);
 		//start at index 1, since the first comment was added during ticket creation
-		for (int i = 1; i < ticketComments.length(); i++) {
-			String body = "{\"ticket\": {\"comment\":" + ticketComments.getJSONObject(i).toString() + "}}";
+		for (int i = 1; i < comments.size(); i++) {
+			String body = "{\"ticket\": {\"comment\":" + comments.get(i).toString() + "}}";
 
-			RequestBuilder builder = new RequestBuilder("PUT");
-			Request request = builder.setUrl(ghosteryZendeskAPI)
-					.addHeader("Content-Type", "application/json")
-					.addHeader("Accept", "application/json")
-					.addHeader("Authorization", "Basic " + ghosteryCreds)
-					.setBody(body)
-					.build();
-
+			//create the HTTP request
+			Request request = AsyncRequest.buildGhosteryRequest("PUT", body, ghosteryZendeskAPI);
 			Future<Response> future = AsyncRequest.doAsyncRequest(request);
 			Response result;
+
 			try {
 				result = future.get(15, TimeUnit.SECONDS);
 				System.out.println("Update Ticket: " + result.getStatusCode() + " " + result.getStatusText());
 			} catch (Exception e) {
 				e.printStackTrace();
-				System.out.printf("Ticket not uploaded: %s", ticketComments.get(i).toString());
+				System.out.printf("Ticket not uploaded: %s", comments.get(i).toString());
 				future.cancel(true);
 			}
 		}
+	}
+
+	@Override
+	public String toString(){
+		Gson gson = new Gson();
+		return gson.toJson(this).replace("is_public", "public");
+	}
+
+	public void setBody(String body) {
+		this.body = body;
+	}
+
+	public void setAuthor_id(Long author_id) {
+		this.author_id = author_id;
+	}
+
+	public void setCreated_at(String created_at) {
+		this.created_at = created_at;
+	}
+
+	public void setIs_public(Boolean is_public) {
+		this.is_public = is_public;
 	}
 }

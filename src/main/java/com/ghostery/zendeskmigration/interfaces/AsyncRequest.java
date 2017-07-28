@@ -52,8 +52,8 @@ public interface AsyncRequest {
 				.build();
 	}
 
-	static Request buildGhosteryRequest(String body, String url) {
-		RequestBuilder builder = new RequestBuilder("POST");
+	static Request buildGhosteryRequest(String type, String body, String url) {
+		RequestBuilder builder = new RequestBuilder(type);
 		return builder.setUrl(url)
 				.addHeader("Content-Type", "application/json")
 				.addHeader("Accept", "application/json")

@@ -1,6 +1,8 @@
 package com.ghostery.zendeskmigration;
 
 import com.ghostery.zendeskmigration.interfaces.AsyncRequest;
+
+import java.util.ArrayList;
 import java.util.concurrent.ExecutionException;
 
 /**
@@ -20,8 +22,11 @@ public class ZendeskMigration implements AsyncRequest {
 //		hc.getHelpCenterContent("sections");
 //		hc.getHelpCenterContent("articles");
 
-		Ticket.getTicket(10629);
-		//this.getTickets();
+//		Ticket ticket = Ticket.getTicket(10629);
+//		Ticket.postTicket(ticket);
+
+		ArrayList<Ticket> tickets = Ticket.getTickets();
+		Ticket.postManyTickets(tickets);
 	}
 
 	public static void main(String[] args) {

@@ -55,23 +55,22 @@ public class User implements AsyncRequest {
 	}
 
 	/**
-	 * Post an ArrayList of Users to Zendesk, one-by-one
+	 * Post an ArrayList of Users to Zendesk, one-by-one,
+	 * mapping old/new userIDs along the way
 	 * @param users
 	 * @return
 	 */
 	protected static void postUsers(ArrayList<User> users) {
-		System.out.println("IMPORTING USERS...");
+		System.out.println("POSTING USERS...");
 
 		String ghosteryZendeskAPI = "https://ghosterysupport.zendesk.com/api/v2/users/create_or_update.json";
 
 		for (User u : users) {
 			//build Users into json for POST
-			Gson gson = new Gson();
-			String userString = gson.toJson(u);
+			String body = "{\"user\":" + u.toString() + "}";
 
-			String body = "{\"user\":" + userString + "}";
-
-			Request request = AsyncRequest.buildGhosteryRequest(body, ghosteryZendeskAPI);
+			//create the HTTP request
+			Request request = AsyncRequest.buildGhosteryRequest("POST", body, ghosteryZendeskAPI);
 			Future<Response> future = AsyncRequest.doAsyncRequest(request);
 			Response result;
 
@@ -89,10 +88,16 @@ public class User implements AsyncRequest {
 				}
 			} catch (Exception e) {
 				e.printStackTrace();
-				System.out.printf("User not uploaded: %s", userString);
+				System.out.printf("User not uploaded: %s", u.toString());
 				future.cancel(true);
 			}
 		}
+	}
+
+	@Override
+	public String toString(){
+		Gson gson = new Gson();
+		return gson.toJson(this);
 	}
 
 	private void setName(String name) {
