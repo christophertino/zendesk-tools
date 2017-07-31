@@ -108,7 +108,7 @@ public class Section implements AsyncRequest {
 		this.legacyId = legacyId;
 	}
 
-	public void setCategory_id(Long category_id) {
+	private void setCategory_id(Long category_id) {
 		this.category_id = category_id;
 	}
 }

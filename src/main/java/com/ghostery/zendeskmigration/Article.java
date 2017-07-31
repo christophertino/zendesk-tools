@@ -96,7 +96,7 @@ public class Article implements AsyncRequest {
 	 * Factory function to generate Articles from JSONArray
 	 * @param articles
 	 */
-	protected static ArrayList<Article> buildArticles(JSONArray articles) {
+	private static ArrayList<Article> buildArticles(JSONArray articles) {
 		ArrayList<Article> output = new ArrayList<>();
 		for (int i = 0; i < articles.length(); i++) {
 			JSONObject article = articles.getJSONObject(i);
@@ -130,7 +130,7 @@ public class Article implements AsyncRequest {
 		this.section_id = section_id;
 	}
 
-	public void setComments_disabled(Boolean comments_disabled) {
+	private void setComments_disabled(Boolean comments_disabled) {
 		this.comments_disabled = comments_disabled;
 	}
 }

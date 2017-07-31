@@ -229,39 +229,39 @@ public class Ticket implements AsyncRequest {
 		return gson.toJson(this).replace("is_public", "public"); //for Comments
 	}
 
-	public void setSubject(String subject) {
+	private void setSubject(String subject) {
 		this.subject = subject;
 	}
 
-	public void setRequester_id(Long requester_id) {
+	private void setRequester_id(Long requester_id) {
 		this.requester_id = requester_id;
 	}
 
-	public void setAssignee_id(Long assignee_id) {
+	private void setAssignee_id(Long assignee_id) {
 		this.assignee_id = assignee_id;
 	}
 
-	public void setStatus(String status) {
+	private void setStatus(String status) {
 		this.status = status;
 	}
 
-	public void setCreated_at(String created_at) {
+	private void setCreated_at(String created_at) {
 		this.created_at = created_at;
 	}
 
-	public void setUpdated_at(String updated_at) {
+	private void setUpdated_at(String updated_at) {
 		this.updated_at = updated_at;
 	}
 
-	public void setComment(String comment) {
+	private void setComment(String comment) {
 		this.comment = comment;
 	}
 
-	public void setComments(ArrayList<Comment> comments) {
+	private void setComments(ArrayList<Comment> comments) {
 		this.comments = comments;
 	}
 
-	public void setLegacyID(Integer legacyID) {
+	private void setLegacyID(Integer legacyID) {
 		this.legacyID = legacyID;
 	}
 }
