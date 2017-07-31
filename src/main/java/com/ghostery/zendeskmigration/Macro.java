@@ -95,7 +95,7 @@ public class Macro implements AsyncRequest {
 			Macro m = new Macro();
 
 			m.setTitle(macro.getString("title"));
-			m.setDescription(macro.getString("description"));
+			m.setDescription(macro.optString("description", null));
 			m.setActive(macro.getBoolean("active"));
 			m.setActions(macro.getJSONArray("actions"));
 
