@@ -73,7 +73,7 @@ public class Ticket implements AsyncRequest {
 	}
 
 	/**
-	 * Post a single ticket to Zendesk
+	 * POST a single ticket to Zendesk
 	 * @param ticket
 	 */
 	protected static void postTicket(Ticket ticket) {
@@ -135,7 +135,7 @@ public class Ticket implements AsyncRequest {
 	}
 
 	/**
-	 * Batch post array of up to 100 tickets
+	 * Batch POST array of up to 100 tickets
 	 * @param tickets
 	 */
 	protected static void postTickets(ArrayList<Ticket> tickets) {

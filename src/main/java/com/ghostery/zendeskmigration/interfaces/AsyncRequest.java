@@ -44,6 +44,11 @@ public interface AsyncRequest {
 		});
 	}
 
+	/**
+	 * Build GET requests against Evidon Zendesk
+	 * @param url
+	 * @return
+	 */
 	static Request buildEvidonRequest(String url) {
 		RequestBuilder builder = new RequestBuilder("GET");
 		return builder.setUrl(url)
@@ -52,6 +57,13 @@ public interface AsyncRequest {
 				.build();
 	}
 
+	/**
+	 * Build POST and PUT requests against Ghostery Zendesk
+	 * @param type     "POST" or "PUT"
+	 * @param body
+	 * @param url
+	 * @return
+	 */
 	static Request buildGhosteryRequest(String type, String body, String url) {
 		RequestBuilder builder = new RequestBuilder(type);
 		return builder.setUrl(url)

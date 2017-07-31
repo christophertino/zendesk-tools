@@ -24,7 +24,7 @@ import java.util.concurrent.TimeUnit;
 
 public class User implements AsyncRequest {
 
-	static HashMap<Integer, Long> userIDs = new HashMap<>();
+	protected static HashMap<Integer, Long> userIDs = new HashMap<>();
 	private String name;
 	private String email;
 	private String role;
@@ -55,7 +55,7 @@ public class User implements AsyncRequest {
 	}
 
 	/**
-	 * Post an ArrayList of Users to Zendesk, one-by-one,
+	 * POST an ArrayList of Users to Zendesk, one-by-one,
 	 * mapping old/new userIDs along the way
 	 * @param users
 	 * @return
@@ -82,7 +82,7 @@ public class User implements AsyncRequest {
 					//map old userID to new userID
 					System.out.println("Mapping old userID: " + u.legacyId + " to new userID: " + newUserId);
 					userIDs.put(u.legacyId, newUserId);
-					System.out.println("Post User :" + result.getStatusCode() + " " + result.getStatusText() + " ID: " + userIDs.get(u.legacyId));
+					System.out.println("Post User:" + result.getStatusCode() + " " + result.getStatusText() + " ID: " + userIDs.get(u.legacyId));
 				} else {
 					System.out.println("Post User error " + result.getStatusCode() + " " + result.getStatusText());
 				}

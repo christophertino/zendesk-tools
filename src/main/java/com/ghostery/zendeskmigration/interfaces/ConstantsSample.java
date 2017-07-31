@@ -1,7 +1,7 @@
 package com.ghostery.zendeskmigration.interfaces;
 
 /**
- * zendesk-migration
+ * Zendesk Migration
  *
  * @author Christopher Tino
  *

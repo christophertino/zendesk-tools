@@ -17,10 +17,8 @@ import java.util.concurrent.ExecutionException;
 public class ZendeskMigration implements AsyncRequest {
 
 	private ZendeskMigration() throws ExecutionException, InterruptedException {
-//		HelpCenter hc = new HelpCenter();
-//		hc.getHelpCenterContent("categories");
-//		hc.getHelpCenterContent("sections");
-//		hc.getHelpCenterContent("articles");
+//		ArrayList<Article> articles = Article.getArticles();
+//		Article.postArticles(articles);
 
 //		Ticket ticket = Ticket.getTicket(10629);
 //		Ticket.postTicket(ticket);

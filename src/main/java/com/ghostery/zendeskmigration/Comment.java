@@ -29,7 +29,7 @@ public class Comment implements AsyncRequest {
 	private String created_at;
 	private Boolean is_public;
 
-	public Comment() {}
+	private Comment() {}
 
 	/**
 	 * Get an array of all Comments attached to a ticket
@@ -115,19 +115,19 @@ public class Comment implements AsyncRequest {
 		return gson.toJson(this).replace("is_public", "public");
 	}
 
-	public void setBody(String body) {
+	private void setBody(String body) {
 		this.body = body;
 	}
 
-	public void setAuthor_id(Long author_id) {
+	private void setAuthor_id(Long author_id) {
 		this.author_id = author_id;
 	}
 
-	public void setCreated_at(String created_at) {
+	private void setCreated_at(String created_at) {
 		this.created_at = created_at;
 	}
 
-	public void setIs_public(Boolean is_public) {
+	private void setIs_public(Boolean is_public) {
 		this.is_public = is_public;
 	}
 }
