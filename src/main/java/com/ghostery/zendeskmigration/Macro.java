@@ -2,12 +2,14 @@ package com.ghostery.zendeskmigration;
 
 import com.ghostery.zendeskmigration.interfaces.AsyncRequest;
 import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import org.asynchttpclient.Request;
 import org.asynchttpclient.Response;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import java.util.ArrayList;
+import java.lang.reflect.Type;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -26,7 +28,7 @@ public class Macro implements AsyncRequest {
 	private String title;
 	private String description;
 	private Boolean active;
-	private JSONArray actions;
+	private List<Map<String, Object>> actions;
 
 	private Macro() {}
 
@@ -67,7 +69,7 @@ public class Macro implements AsyncRequest {
 			m.setTitle(macro.getString("title"));
 			m.setDescription(macro.optString("description", null));
 			m.setActive(macro.getBoolean("active"));
-			m.setActions(macro.getJSONArray("actions"));
+			m.setActions(buildActionList(macro.getJSONArray("actions")));
 
 			output.add(m);
 		}
@@ -104,6 +106,30 @@ public class Macro implements AsyncRequest {
 		}
 	}
 
+	/**
+	 * Deserialize Actions JSONArray to List<Map> using GSON, and
+	 * remove unnecessary properties
+	 * @param json
+	 * @return
+	 */
+	private static List<Map<String, Object>> buildActionList(JSONArray json) {
+		Gson gson = new Gson();
+		Type listType = new TypeToken<List<Map>>(){}.getType();
+		List<Map<String, Object>> output = gson.fromJson(json.toString(), listType);
+
+		//Check for and remove group_id, current_tags keys
+		Iterator<Map<String, Object>> i = output.iterator();
+		while (i.hasNext()) {
+			Map<String, Object> child = i.next();
+			String value = child.get("field").toString();
+			if(Objects.equals(value, "group_id") || Objects.equals(value, "current_tags")) {
+				i.remove();
+			}
+		}
+
+		return output;
+	}
+
 	@Override
 	public String toString(){
 		Gson gson = new Gson();
@@ -122,7 +148,7 @@ public class Macro implements AsyncRequest {
 		this.active = active;
 	}
 
-	private void setActions(JSONArray actions) {
+	private void setActions(List<Map<String, Object>> actions) {
 		this.actions = actions;
 	}
 }
