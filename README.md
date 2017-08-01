@@ -1,6 +1,6 @@
 ## Zendesk Migration Tool
 
-Migrate tickets, users, comments, macros, categories, sections and articles from one Zendesk account to another.
+Migrate tickets, users and Help Center content between Zendesk accounts.
 
 ### Configuration
 

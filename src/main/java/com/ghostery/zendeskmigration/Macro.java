@@ -55,6 +55,26 @@ public class Macro implements AsyncRequest {
 	}
 
 	/**
+	 * Factory function to generate Macros from JSONArray
+	 * @param macros
+	 */
+	private static ArrayList<Macro> buildMacros(JSONArray macros) {
+		ArrayList<Macro> output = new ArrayList<>();
+		for (int i = 0; i < macros.length(); i++) {
+			JSONObject macro = macros.getJSONObject(i);
+			Macro m = new Macro();
+
+			m.setTitle(macro.getString("title"));
+			m.setDescription(macro.optString("description", null));
+			m.setActive(macro.getBoolean("active"));
+			m.setActions(macro.getJSONArray("actions"));
+
+			output.add(m);
+		}
+		return output;
+	}
+
+	/**
 	 * POST an ArrayList of Macros to Zendesk, one-by-one
 	 * @param macros
 	 * @return
@@ -82,26 +102,6 @@ public class Macro implements AsyncRequest {
 				future.cancel(true);
 			}
 		}
-	}
-
-	/**
-	 * Factory function to generate Macros from JSONArray
-	 * @param macros
-	 */
-	private static ArrayList<Macro> buildMacros(JSONArray macros) {
-		ArrayList<Macro> output = new ArrayList<>();
-		for (int i = 0; i < macros.length(); i++) {
-			JSONObject macro = macros.getJSONObject(i);
-			Macro m = new Macro();
-
-			m.setTitle(macro.getString("title"));
-			m.setDescription(macro.optString("description", null));
-			m.setActive(macro.getBoolean("active"));
-			m.setActions(macro.getJSONArray("actions"));
-
-			output.add(m);
-		}
-		return output;
 	}
 
 	@Override

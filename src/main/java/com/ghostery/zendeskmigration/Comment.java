@@ -38,7 +38,7 @@ public class Comment implements AsyncRequest {
 	 * @throws ExecutionException
 	 * @throws InterruptedException
 	 */
-	protected static ArrayList<Comment> getTicketComments(Integer ticketID) throws ExecutionException, InterruptedException {
+	protected static ArrayList<Comment> getComments(Integer ticketID) throws ExecutionException, InterruptedException {
 		System.out.println("GETTING COMMENTS FOR TICKET " + ticketID + "...");
 		String evidonZendeskAPI = "https://ghostery.zendesk.com/api/v2/tickets/" + ticketID + "/comments.json";
 
@@ -83,12 +83,12 @@ public class Comment implements AsyncRequest {
 	 * @throws ExecutionException
 	 * @throws InterruptedException
 	 */
-	protected static void updateTicketComments(Integer newTicketID, Integer oldTicketID) throws ExecutionException, InterruptedException {
+	protected static void updateComments(Integer newTicketID, Integer oldTicketID) throws ExecutionException, InterruptedException {
 		System.out.println("UPDATING TICKET COMMENTS...");
 
 		String ghosteryZendeskAPI = "https://ghosterysupport.zendesk.com/api/v2/tickets/" + newTicketID + ".json";
 
-		ArrayList<Comment> comments = getTicketComments(oldTicketID);
+		ArrayList<Comment> comments = getComments(oldTicketID);
 		//start at index 1, since the first comment was added during ticket creation
 		for (int i = 1; i < comments.size(); i++) {
 			String body = "{\"ticket\": {\"comment\":" + comments.get(i).toString() + "}}";

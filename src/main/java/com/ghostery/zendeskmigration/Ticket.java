@@ -73,6 +73,33 @@ public class Ticket implements AsyncRequest {
 	}
 
 	/**
+	 * Factory function to build a single Ticket
+	 * @param ticketObj
+	 * @return
+	 * @throws ExecutionException
+	 * @throws InterruptedException
+	 */
+	private static Ticket buildTicket(JSONObject ticketObj) throws ExecutionException, InterruptedException {
+		Ticket t = new Ticket();
+
+		t.setSubject(ticketObj.getString("subject"));
+		t.setRequester_id(userIDs.get(ticketObj.getInt("requester_id"))); //get new userID from map
+		t.setAssignee_id(userIDs.get(ticketObj.getInt("assignee_id")));
+		t.setStatus((ticketObj.getString("status").equals("closed")) ? "solved" : ticketObj.getString("status")); //reopen the ticket if it's closed, so we can update it below
+		t.setCreated_at(ticketObj.getString("created_at"));
+		t.setUpdated_at(ticketObj.getString("updated_at"));
+		t.setLegacyID(ticketObj.getInt("id")); //passed to updateComments and then removed before POST
+
+		if (ticketObj.get("comment_count") != null) {
+			//we can only post 1 comment to a ticket at a time. Here, add the first comment (user request)
+			Comment firstComment = Comment.getComments(ticketObj.getInt("id")).get(0);
+			t.setComment(firstComment.toString());
+		}
+
+		return t;
+	}
+
+	/**
 	 * POST a single ticket to Zendesk
 	 * @param ticket
 	 */
@@ -96,7 +123,7 @@ public class Ticket implements AsyncRequest {
 				Integer ticketID = responseObject.getJSONObject("ticket").getInt("id");
 				System.out.println("Post Ticket: "  + result.getStatusCode() + " " + result.getStatusText() + " ID: " + ticketID);
 				//build out comment for the new ticket
-				Comment.updateTicketComments(ticketID, ticket.legacyID); //new ticket ID, ticketID from original Evidon ticket
+				Comment.updateComments(ticketID, ticket.legacyID); //new ticket ID, ticketID from original Evidon ticket
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -135,6 +162,40 @@ public class Ticket implements AsyncRequest {
 	}
 
 	/**
+	 * Factory function to generate an ArrayList of Tickets
+	 * @param tickets
+	 * @return
+	 * @throws ExecutionException
+	 * @throws InterruptedException
+	 */
+	private static ArrayList<Ticket> buildTickets(JSONArray tickets) throws ExecutionException, InterruptedException {
+		ArrayList<Ticket> output = new ArrayList<>();
+		for (int i = 0; i < tickets.length(); i++) {
+			JSONObject ticketObj = tickets.getJSONObject(i);
+
+			//only get plugin tickets
+			if (ticketObj.getJSONArray("tags").toString().contains("plugin")){
+				Ticket t = new Ticket();
+
+				t.setSubject(ticketObj.getString("subject"));
+				t.setRequester_id(userIDs.get(ticketObj.getInt("requester_id"))); //get new userID from map
+				t.setAssignee_id(userIDs.get(ticketObj.getInt("assignee_id")));
+				t.setStatus(ticketObj.getString("status"));
+				t.setCreated_at(ticketObj.getString("created_at"));
+				t.setUpdated_at(ticketObj.getString("updated_at"));
+
+				if (ticketObj.get("comment_count") != null) {
+					//create_many.json endpoint allows for comments[]
+					t.setComments(Comment.getComments(ticketObj.getInt("id")));
+				}
+
+				output.add(t);
+			}
+		}
+		return output;
+	}
+
+	/**
 	 * Batch POST array of up to 100 tickets
 	 * @param tickets
 	 */
@@ -160,67 +221,6 @@ public class Ticket implements AsyncRequest {
 			System.out.println("Ticket batch not uploaded");
 			future.cancel(true);
 		}
-	}
-
-	/**
-	 * Factory function to build a single Ticket
-	 * @param ticketObj
-	 * @return
-	 * @throws ExecutionException
-	 * @throws InterruptedException
-	 */
-	private static Ticket buildTicket(JSONObject ticketObj) throws ExecutionException, InterruptedException {
-		Ticket t = new Ticket();
-
-		t.setSubject(ticketObj.getString("subject"));
-		t.setRequester_id(userIDs.get(ticketObj.getInt("requester_id"))); //get new userID from map
-		t.setAssignee_id(userIDs.get(ticketObj.getInt("assignee_id")));
-		t.setStatus((ticketObj.getString("status").equals("closed")) ? "solved" : ticketObj.getString("status")); //reopen the ticket if it's closed, so we can update it below
-		t.setCreated_at(ticketObj.getString("created_at"));
-		t.setUpdated_at(ticketObj.getString("updated_at"));
-		t.setLegacyID(ticketObj.getInt("id")); //passed to updateTicketComments and then removed before POST
-
-		if (ticketObj.get("comment_count") != null) {
-			//we can only post 1 comment to a ticket at a time. Here, add the first comment (user request)
-			Comment firstComment = Comment.getTicketComments(ticketObj.getInt("id")).get(0);
-			t.setComment(firstComment.toString());
-		}
-
-		return t;
-	}
-
-	/**
-	 * Factory function to generate an ArrayList of Tickets
-	 * @param tickets
-	 * @return
-	 * @throws ExecutionException
-	 * @throws InterruptedException
-	 */
-	private static ArrayList<Ticket> buildTickets(JSONArray tickets) throws ExecutionException, InterruptedException {
-		ArrayList<Ticket> output = new ArrayList<>();
-		for (int i = 0; i < tickets.length(); i++) {
-			JSONObject ticketObj = tickets.getJSONObject(i);
-
-			//only get plugin tickets
-			if (ticketObj.getJSONArray("tags").toString().contains("plugin")){
-				Ticket t = new Ticket();
-
-				t.setSubject(ticketObj.getString("subject"));
-				t.setRequester_id(userIDs.get(ticketObj.getInt("requester_id"))); //get new userID from map
-				t.setAssignee_id(userIDs.get(ticketObj.getInt("assignee_id")));
-				t.setStatus(ticketObj.getString("status"));
-				t.setCreated_at(ticketObj.getString("created_at"));
-				t.setUpdated_at(ticketObj.getString("updated_at"));
-
-				if (ticketObj.get("comment_count") != null) {
-					//create_many.json endpoint allows for comments[]
-					t.setComments(Comment.getTicketComments(ticketObj.getInt("id")));
-				}
-
-				output.add(t);
-			}
-		}
-		return output;
 	}
 
 	@Override

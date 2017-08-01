@@ -64,6 +64,26 @@ public class Article implements AsyncRequest {
 	}
 
 	/**
+	 * Factory function to generate Articles from JSONArray
+	 * @param articles
+	 */
+	private static ArrayList<Article> buildArticles(JSONArray articles) {
+		ArrayList<Article> output = new ArrayList<>();
+		for (int i = 0; i < articles.length(); i++) {
+			JSONObject article = articles.getJSONObject(i);
+			Article a = new Article();
+
+			a.setTitle(article.getString("title"));
+			a.setBody(article.getString("body"));
+			a.setSection_id(Section.sectionIDs.get(article.getInt("section_id"))); //get new section_id from map
+			a.setComments_disabled(true);
+
+			output.add(a);
+		}
+		return output;
+	}
+
+	/**
 	 * POST an ArrayList of Articles to Zendesk, one-by-one,
 	 * @param articles  articles, sections or categories
 	 */
@@ -90,26 +110,6 @@ public class Article implements AsyncRequest {
 				future.cancel(true);
 			}
 		}
-	}
-
-	/**
-	 * Factory function to generate Articles from JSONArray
-	 * @param articles
-	 */
-	private static ArrayList<Article> buildArticles(JSONArray articles) {
-		ArrayList<Article> output = new ArrayList<>();
-		for (int i = 0; i < articles.length(); i++) {
-			JSONObject article = articles.getJSONObject(i);
-			Article a = new Article();
-
-			a.setTitle(article.getString("title"));
-			a.setBody(article.getString("body"));
-			a.setSection_id(Section.sectionIDs.get(article.getInt("section_id"))); //get new section_id from map
-			a.setComments_disabled(true);
-
-			output.add(a);
-		}
-		return output;
 	}
 
 	@Override
