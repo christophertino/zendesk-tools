@@ -2,6 +2,7 @@ package com.ghostery.zendeskmigration;
 
 import com.ghostery.zendeskmigration.interfaces.AsyncRequest;
 import com.google.gson.Gson;
+import org.apache.commons.text.StringEscapeUtils;
 import org.asynchttpclient.Request;
 import org.asynchttpclient.Response;
 import org.json.JSONArray;
@@ -84,7 +85,7 @@ public class Ticket implements AsyncRequest {
 
 		t.setSubject(ticketObj.getString("subject"));
 		t.setRequester_id(userIDs.get(ticketObj.getInt("requester_id"))); //get new userID from map
-		t.setAssignee_id(userIDs.get(ticketObj.getInt("assignee_id")));
+		t.setAssignee_id(userIDs.get(ticketObj.optInt("assignee_id")));
 		t.setStatus((ticketObj.getString("status").equals("closed")) ? "solved" : ticketObj.getString("status")); //reopen the ticket if it's closed, so we can update it below
 		t.setCreated_at(ticketObj.getString("created_at"));
 		t.setUpdated_at(ticketObj.getString("updated_at"));
@@ -124,6 +125,8 @@ public class Ticket implements AsyncRequest {
 				System.out.println("Post Ticket: "  + result.getStatusCode() + " " + result.getStatusText() + " ID: " + ticketID);
 				//build out comment for the new ticket
 				Comment.updateComments(ticketID, ticket.legacyID); //new ticket ID, ticketID from original Evidon ticket
+			} else {
+				System.out.println("Post Ticket Error: "  + result.getStatusCode() + " " + result.getStatusText());
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -139,7 +142,7 @@ public class Ticket implements AsyncRequest {
 	 */
 	protected static ArrayList<Ticket> getTickets() throws ExecutionException, InterruptedException {
 		System.out.println("GETTING TICKETS...");
-		String evidonZendeskAPI = "https://ghostery.zendesk.com/api/v2/tickets.json?include=users,comment_count&per_page=1";//&page=2
+		String evidonZendeskAPI = "https://ghostery.zendesk.com/api/v2/tickets.json?include=users,comment_count&per_page=100&page=6"; //6 not uploaded
 
 		//create the HTTP request
 		Request request = AsyncRequest.buildEvidonRequest(evidonZendeskAPI);
@@ -177,9 +180,9 @@ public class Ticket implements AsyncRequest {
 			if (ticketObj.getJSONArray("tags").toString().contains("plugin")){
 				Ticket t = new Ticket();
 
-				t.setSubject(ticketObj.getString("subject"));
+				t.setSubject(StringEscapeUtils.escapeHtml4(ticketObj.getString("subject")));
 				t.setRequester_id(userIDs.get(ticketObj.getInt("requester_id"))); //get new userID from map
-				t.setAssignee_id(userIDs.get(ticketObj.getInt("assignee_id")));
+				t.setAssignee_id(userIDs.get(ticketObj.optInt("assignee_id")));
 				t.setStatus(ticketObj.getString("status"));
 				t.setCreated_at(ticketObj.getString("created_at"));
 				t.setUpdated_at(ticketObj.getString("updated_at"));
@@ -213,9 +216,7 @@ public class Ticket implements AsyncRequest {
 
 		try {
 			result = future.get(15, TimeUnit.SECONDS);
-			if (result.getStatusCode() <= 201) {
-				System.out.println("Batch Post Ticket: "  + result.getStatusCode() + " " + result.getStatusText());
-			}
+			System.out.println("Batch Post Ticket: "  + result.getStatusCode() + " " + result.getStatusText());
 		} catch (Exception e) {
 			e.printStackTrace();
 			System.out.println("Ticket batch not uploaded");

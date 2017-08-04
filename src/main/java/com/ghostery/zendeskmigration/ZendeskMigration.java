@@ -20,14 +20,14 @@ public class ZendeskMigration implements AsyncRequest {
 //		ArrayList<Article> articles = Article.getArticles();
 //		Article.postArticles(articles);
 
-//		Ticket ticket = Ticket.getTicket(10629);
+//		Ticket ticket = Ticket.getTicket(12697);
 //		Ticket.postTicket(ticket);
 
-		//ArrayList<Ticket> tickets = Ticket.getTickets();
-		//Ticket.postTickets(tickets);
+		ArrayList<Ticket> tickets = Ticket.getTickets();
+		Ticket.postTickets(tickets);
 
-		ArrayList<Macro> macros = Macro.getMacros();
-		Macro.postMacros(macros);
+//		ArrayList<Macro> macros = Macro.getMacros();
+//		Macro.postMacros(macros);
 	}
 
 	public static void main(String[] args) {
