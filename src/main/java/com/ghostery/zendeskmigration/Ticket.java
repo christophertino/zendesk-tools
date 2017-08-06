@@ -136,32 +136,36 @@ public class Ticket implements AsyncRequest {
 	}
 
 	/**
-	 * Retrieve a batch of 100 tickets and sideload users / comment_count
+	 * Retrieve a batch of 100 tickets with sideload users / comment_count, and POST.
+	 * Will paginate through all tickets in the account
 	 * @throws ExecutionException
 	 * @throws InterruptedException
 	 */
-	protected static ArrayList<Ticket> getTickets() throws ExecutionException, InterruptedException {
+	protected static void getTickets() throws ExecutionException, InterruptedException {
 		System.out.println("GETTING TICKETS...");
-		String evidonZendeskAPI = "https://ghostery.zendesk.com/api/v2/tickets.json?include=users,comment_count&per_page=100&page=6"; //6 not uploaded
+		String evidonZendeskAPI = "https://ghostery.zendesk.com/api/v2/tickets.json?include=users,comment_count&per_page=100";
 
-		//create the HTTP request
-		Request request = AsyncRequest.buildEvidonRequest(evidonZendeskAPI);
-		Future<Response> future = AsyncRequest.doAsyncRequest(request);
-		Response result = future.get();
+		while(evidonZendeskAPI != null) {
+			//create the HTTP request
+			Request request = AsyncRequest.buildEvidonRequest(evidonZendeskAPI);
+			Future<Response> future = AsyncRequest.doAsyncRequest(request);
+			Response result = future.get();
 
-		//Convert response to JSON Object and extract tickets and users
-		JSONObject responseObject = new JSONObject(result.getResponseBody());
-		JSONArray responseTicketArray = responseObject.getJSONArray("tickets");
-		JSONArray responseUserArray = responseObject.getJSONArray("users");
+			//Convert response to JSON Object and extract tickets and users
+			JSONObject responseObject = new JSONObject(result.getResponseBody());
+			JSONArray responseTicketArray = responseObject.getJSONArray("tickets");
+			JSONArray responseUserArray = responseObject.getJSONArray("users");
 
-		//build new Users and post to Zendesk
-		ArrayList<User> userList = User.buildUsers(responseUserArray);
-		User.postUsers(userList);
+			//build new Users and post to Zendesk
+			ArrayList<User> userList = User.buildUsers(responseUserArray);
+			User.postUsers(userList);
 
-		ArrayList<Ticket> tickets = buildTickets(responseTicketArray);
-		System.out.println("TICKETS: " + tickets.toString());
+			ArrayList<Ticket> tickets = buildTickets(responseTicketArray);
+			System.out.println("TICKETS: " + tickets.toString());
 
-		return tickets;
+			postTickets(tickets);
+			evidonZendeskAPI = responseObject.optString("next_page", null);
+		}
 	}
 
 	/**
@@ -202,7 +206,7 @@ public class Ticket implements AsyncRequest {
 	 * Batch POST array of up to 100 tickets
 	 * @param tickets
 	 */
-	protected static void postTickets(ArrayList<Ticket> tickets) {
+	private static void postTickets(ArrayList<Ticket> tickets) {
 		System.out.println("BULK IMPORTING TICKETS...");
 
 		String ghosteryZendeskAPI = "https://ghosterysupport.zendesk.com/api/v2/imports/tickets/create_many.json";
