@@ -47,7 +47,7 @@ public class Ticket implements AsyncRequest {
 	 */
 	protected static Ticket getTicket(Integer ticketID) throws ExecutionException, InterruptedException {
 		System.out.println("GET TICKET " + ticketID + "...");
-		String evidonZendeskAPI = "https://ghostery.zendesk.com/api/v2/tickets/" + ticketID + ".json?include=users,comment_count";
+		String evidonZendeskAPI = "https://evidon.zendesk.com/api/v2/tickets/" + ticketID + ".json?include=users,comment_count";
 
 		//create the HTTP request
 		Request request = AsyncRequest.buildEvidonRequest(evidonZendeskAPI);
@@ -107,7 +107,7 @@ public class Ticket implements AsyncRequest {
 	protected static void postTicket(Ticket ticket) {
 		System.out.println("POST TICKET...");
 
-		String ghosteryZendeskAPI = "https://ghosterysupport.zendesk.com/api/v2/imports/tickets.json";
+		String ghosteryZendeskAPI = "https://ghostery.zendesk.com/api/v2/imports/tickets.json";
 
 		//build Ticket into json
 		String body = "{\"ticket\":" + ticket.toString() + "}";
@@ -143,7 +143,7 @@ public class Ticket implements AsyncRequest {
 	 */
 	protected static void getTickets() throws ExecutionException, InterruptedException {
 		Integer currentPage = 1;
-		String evidonZendeskAPI = "https://ghostery.zendesk.com/api/v2/tickets.json?include=users,comment_count&per_page=100&page=" + currentPage;
+		String evidonZendeskAPI = "https://evidon.zendesk.com/api/v2/tickets.json?include=users,comment_count&per_page=100&page=" + currentPage;
 
 		while(evidonZendeskAPI != null) {
 			System.out.println("GETTING TICKETS, PAGE " + currentPage + "...");
@@ -215,7 +215,7 @@ public class Ticket implements AsyncRequest {
 	private static void postTickets(ArrayList<Ticket> tickets) {
 		System.out.println("BULK IMPORTING TICKETS...");
 
-		String ghosteryZendeskAPI = "https://ghosterysupport.zendesk.com/api/v2/imports/tickets/create_many.json";
+		String ghosteryZendeskAPI = "https://ghostery.zendesk.com/api/v2/imports/tickets/create_many.json";
 
 		String body = "{\"tickets\":" + tickets.toString() + "}";
 

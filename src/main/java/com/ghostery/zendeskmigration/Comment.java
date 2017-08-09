@@ -40,7 +40,7 @@ public class Comment implements AsyncRequest {
 	 */
 	protected static ArrayList<Comment> getComments(Integer ticketID) throws ExecutionException, InterruptedException {
 		System.out.println("GETTING COMMENTS FOR TICKET " + ticketID + "...");
-		String evidonZendeskAPI = "https://ghostery.zendesk.com/api/v2/tickets/" + ticketID + "/comments.json";
+		String evidonZendeskAPI = "https://evidon.zendesk.com/api/v2/tickets/" + ticketID + "/comments.json";
 
 		//create the HTTP request
 		Request request = AsyncRequest.buildEvidonRequest(evidonZendeskAPI);
@@ -86,7 +86,7 @@ public class Comment implements AsyncRequest {
 	protected static void updateComments(Integer newTicketID, Integer oldTicketID) throws ExecutionException, InterruptedException {
 		System.out.println("UPDATING TICKET COMMENTS...");
 
-		String ghosteryZendeskAPI = "https://ghosterysupport.zendesk.com/api/v2/tickets/" + newTicketID + ".json";
+		String ghosteryZendeskAPI = "https://ghostery.zendesk.com/api/v2/tickets/" + newTicketID + ".json";
 
 		ArrayList<Comment> comments = getComments(oldTicketID);
 		//start at index 1, since the first comment was added during ticket creation

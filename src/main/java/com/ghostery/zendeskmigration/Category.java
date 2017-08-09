@@ -57,7 +57,7 @@ public class Category implements AsyncRequest {
 	protected static void postCategories(ArrayList<Category> categories) {
 		System.out.println("POSTING CATEGORIES...");
 
-		String ghosteryZendeskAPI = "https://ghosterysupport.zendesk.com/api/v2/help_center/en-us/categories.json";
+		String ghosteryZendeskAPI = "https://ghostery.zendesk.com/api/v2/help_center/en-us/categories.json";
 
 		for (Category c : categories) {
 			//build categories into json for POST

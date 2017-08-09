@@ -36,7 +36,7 @@ public class Article implements AsyncRequest {
 	 */
 	protected static ArrayList<Article> getArticles() throws ExecutionException, InterruptedException {
 		System.out.println("GETTING ARTICLES...");
-		String evidonZendeskAPI = "https://ghostery.zendesk.com/api/v2/help_center/en-us/articles.json?include=categories,sections&per_page=100";
+		String evidonZendeskAPI = "https://evidon.zendesk.com/api/v2/help_center/en-us/articles.json?include=categories,sections&per_page=100";
 
 		//create the HTTP request
 		Request request = AsyncRequest.buildEvidonRequest(evidonZendeskAPI);
@@ -94,7 +94,7 @@ public class Article implements AsyncRequest {
 			//build articles into json for POST
 			String body = "{\"article\":" + a.toString() + "}";
 
-			String ghosteryZendeskAPI = "https://ghosterysupport.zendesk.com/api/v2/help_center/en-us/sections/" + a.section_id + "articles.json";
+			String ghosteryZendeskAPI = "https://ghostery.zendesk.com/api/v2/help_center/en-us/sections/" + a.section_id + "articles.json";
 
 			//create the HTTP request
 			Request request = AsyncRequest.buildGhosteryRequest("POST", body, ghosteryZendeskAPI);

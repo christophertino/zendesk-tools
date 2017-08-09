@@ -63,7 +63,7 @@ public class Section implements AsyncRequest {
 			//build sections into json for POST
 			String body = "{\"section\":" + s.toString() + "}";
 
-			String ghosteryZendeskAPI = "https://ghosterysupport.zendesk.com/api/v2/help_center/en-us/categories/" + s.category_id + "sections.json";
+			String ghosteryZendeskAPI = "https://ghostery.zendesk.com/api/v2/help_center/en-us/categories/" + s.category_id + "sections.json";
 
 			//create the HTTP request
 			Request request = AsyncRequest.buildGhosteryRequest("POST", body, ghosteryZendeskAPI);

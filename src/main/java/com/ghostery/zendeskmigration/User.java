@@ -63,7 +63,7 @@ public class User implements AsyncRequest {
 	protected static void postUsers(ArrayList<User> users) {
 		System.out.println("POSTING USERS...");
 
-		String ghosteryZendeskAPI = "https://ghosterysupport.zendesk.com/api/v2/users/create_or_update.json";
+		String ghosteryZendeskAPI = "https://ghostery.zendesk.com/api/v2/users/create_or_update.json";
 
 		for (User u : users) {
 			//build Users into json for POST

@@ -39,7 +39,7 @@ public class Macro implements AsyncRequest {
 	 */
 	protected static ArrayList<Macro> getMacros() throws ExecutionException, InterruptedException {
 		System.out.println("GETTING MACROS...");
-		String evidonZendeskAPI = "https://ghostery.zendesk.com/api/v2/macros.json";
+		String evidonZendeskAPI = "https://evidon.zendesk.com/api/v2/macros.json";
 
 		//create the HTTP request
 		Request request = AsyncRequest.buildEvidonRequest(evidonZendeskAPI);
@@ -84,7 +84,7 @@ public class Macro implements AsyncRequest {
 	protected static void postMacros(ArrayList<Macro> macros) {
 		System.out.println("POSTING MACROS...");
 
-		String ghosteryZendeskAPI = "https://ghosterysupport.zendesk.com/api/v2/macros.json";
+		String ghosteryZendeskAPI = "https://ghostery.zendesk.com/api/v2/macros.json";
 
 		for (Macro m : macros) {
 			//build macros into json for POST
