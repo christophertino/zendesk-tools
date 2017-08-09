@@ -142,10 +142,12 @@ public class Ticket implements AsyncRequest {
 	 * @throws InterruptedException
 	 */
 	protected static void getTickets() throws ExecutionException, InterruptedException {
-		System.out.println("GETTING TICKETS...");
-		String evidonZendeskAPI = "https://ghostery.zendesk.com/api/v2/tickets.json?include=users,comment_count&per_page=100";
+		Integer currentPage = 1;
+		String evidonZendeskAPI = "https://ghostery.zendesk.com/api/v2/tickets.json?include=users,comment_count&per_page=100&page=" + currentPage;
 
 		while(evidonZendeskAPI != null) {
+			System.out.println("GETTING TICKETS, PAGE " + currentPage + "...");
+
 			//create the HTTP request
 			Request request = AsyncRequest.buildEvidonRequest(evidonZendeskAPI);
 			Future<Response> future = AsyncRequest.doAsyncRequest(request);
@@ -164,6 +166,10 @@ public class Ticket implements AsyncRequest {
 			System.out.println("TICKETS: " + tickets.toString());
 
 			postTickets(tickets);
+
+			//pause for 30sec so we don't go over the API rate limit
+			Thread.sleep(30000);
+			currentPage++;
 			evidonZendeskAPI = responseObject.optString("next_page", null);
 		}
 	}
