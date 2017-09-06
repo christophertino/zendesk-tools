@@ -2,7 +2,6 @@ package com.ghostery.zendeskmigration;
 
 import com.ghostery.zendeskmigration.interfaces.AsyncRequest;
 
-import java.util.ArrayList;
 import java.util.concurrent.ExecutionException;
 
 /**
@@ -30,7 +29,10 @@ public class ZendeskMigration implements AsyncRequest {
 //		Ticket.postTicket(ticket);
 
 		//Iterate over all tickets and POST in batches of 100, along with users and comments
-		Ticket.getTickets();
+//		Ticket.getTickets();
+
+		//Update existing tickets
+		Ticket.getNewTickets();
 	}
 
 	public static void main(String[] args) {

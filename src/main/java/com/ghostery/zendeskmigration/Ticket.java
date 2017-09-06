@@ -14,6 +14,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import static com.ghostery.zendeskmigration.User.userIDs;
+import static com.ghostery.zendeskmigration.interfaces.Constants.CLIQZ_SHARING_ID;
 
 /**
  * Zendesk Migration
@@ -26,12 +27,14 @@ import static com.ghostery.zendeskmigration.User.userIDs;
 
 public class Ticket implements AsyncRequest {
 
+	private Integer id;
 	private String subject;
 	private Long requester_id;
 	private Long assignee_id;
 	private String status;
 	private String created_at;
 	private String updated_at;
+	private Long[] sharing_agreement_ids = new Long[1];
 	private String comment;
 	private ArrayList<Comment> comments;
 	private transient Integer legacyID;
@@ -234,10 +237,96 @@ public class Ticket implements AsyncRequest {
 		}
 	}
 
+	/**
+	 * Retrieve only NEW tickets using the Ticket View API
+	 * @throws ExecutionException
+	 * @throws InterruptedException
+	 */
+	protected static void getNewTickets() throws ExecutionException, InterruptedException {
+		Long viewID = 114103705574L; // "New Tickets" view in Zendesk Admin
+		Integer currentPage = 1;
+		String ghosteryZendeskAPI = "https://ghostery.zendesk.com/api/v2/views/" + viewID + "/tickets.json?&per_page=100&page=" + currentPage;
+
+		while(ghosteryZendeskAPI != null) {
+			System.out.println("GETTING NEW TICKETS, PAGE " + currentPage + "...");
+
+			//create the HTTP request
+			Request request = AsyncRequest.buildGhosteryRequest("GET", "", ghosteryZendeskAPI);
+			Future<Response> future = AsyncRequest.doAsyncRequest(request);
+			Response result = future.get();
+
+			//Convert response to JSON Object and extract tickets and users
+			JSONObject responseObject = new JSONObject(result.getResponseBody());
+			JSONArray responseTicketArray = responseObject.getJSONArray("tickets");
+
+			ArrayList<Ticket> tickets = buildNewTickets(responseTicketArray);
+			System.out.println("TICKETS: " + tickets.toString());
+
+			putNewTickets(tickets);
+
+			//pause for 30sec so we don't go over the API rate limit
+			Thread.sleep(30000);
+			currentPage++;
+			ghosteryZendeskAPI = responseObject.optString("next_page", null);
+		}
+	}
+
+	/**
+	 * Factory function to generate an ArrayList of new Tickets and
+	 * add new properties
+	 * @param tickets
+	 * @return
+	 * @throws ExecutionException
+	 * @throws InterruptedException
+	 */
+	private static ArrayList<Ticket> buildNewTickets(JSONArray tickets) throws ExecutionException, InterruptedException {
+		ArrayList<Ticket> output = new ArrayList<>();
+		for (int i = 0; i < tickets.length(); i++) {
+			JSONObject ticketObj = tickets.getJSONObject(i);
+
+			Ticket t = new Ticket();
+			t.setId(ticketObj.getInt("id"));
+			t.setStatus("new");
+			t.setSharing_agreement_ids(CLIQZ_SHARING_ID);
+			output.add(t);
+		}
+		return output;
+	}
+
+	/**
+	 * Batch PUT array of up to 100 new tickets
+	 * @param tickets
+	 */
+	private static void putNewTickets(ArrayList<Ticket> tickets) {
+		System.out.println("BULK UPDATING NEW TICKETS...");
+
+		String ghosteryZendeskAPI = "https://ghostery.zendesk.com/api/v2/tickets/update_many.json";
+
+		String body = "{\"tickets\":" + tickets.toString() + "}";
+
+		//create the HTTP request
+		Request request = AsyncRequest.buildGhosteryRequest("PUT", body, ghosteryZendeskAPI);
+		Future<Response> future = AsyncRequest.doAsyncRequest(request);
+		Response result;
+
+		try {
+			result = future.get(15, TimeUnit.SECONDS);
+			System.out.println("Batch PUT Ticket: "  + result.getStatusCode() + " " + result.getStatusText());
+		} catch (Exception e) {
+			e.printStackTrace();
+			System.out.println("Ticket batch not uploaded");
+			future.cancel(true);
+		}
+	}
+
 	@Override
 	public String toString(){
 		Gson gson = new Gson();
 		return gson.toJson(this).replace("is_public", "public"); //for Comments
+	}
+
+	public void setId(Integer id) {
+		this.id = id;
 	}
 
 	private void setSubject(String subject) {
@@ -262,6 +351,10 @@ public class Ticket implements AsyncRequest {
 
 	private void setUpdated_at(String updated_at) {
 		this.updated_at = updated_at;
+	}
+
+	public void setSharing_agreement_ids(Long sharing_agreement_ids) {
+		this.sharing_agreement_ids[0] = sharing_agreement_ids;
 	}
 
 	private void setComment(String comment) {
