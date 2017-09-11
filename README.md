@@ -18,9 +18,11 @@ $ sudo sysctl -w kern.maxfilesperproc=65536
 $ ulimit -n 65536 65536
 ```
 
-### Build Packaged JAR
+### Build & Run Packaged JAR
 
 1. Run `mvn package`
+
+2. Execute `java -jar target/zendesk-migration-1.0.jar`
 
 ### License
 
