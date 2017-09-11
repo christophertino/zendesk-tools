@@ -18,6 +18,10 @@ $ sudo sysctl -w kern.maxfilesperproc=65536
 $ ulimit -n 65536 65536
 ```
 
+### Build Packaged JAR
+
+1. Run `mvn package`
+
 ### License
 
 Copyright 2017 Ghostery, Inc. All rights reserved.

@@ -264,11 +264,10 @@ public class Ticket implements AsyncRequest {
 
 			putNewTickets(tickets);
 
-			//pause for 30sec so we don't go over the API rate limit
-			Thread.sleep(30000);
 			currentPage++;
 			ghosteryZendeskAPI = responseObject.optString("next_page", null);
 		}
+		System.exit(0);
 	}
 
 	/**
