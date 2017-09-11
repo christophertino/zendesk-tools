@@ -284,11 +284,14 @@ public class Ticket implements AsyncRequest {
 		for (int i = 0; i < tickets.length(); i++) {
 			JSONObject ticketObj = tickets.getJSONObject(i);
 
-			Ticket t = new Ticket();
-			t.setId(ticketObj.getInt("id"));
-			t.setStatus("new");
-			t.setSharing_agreement_ids(CLIQZ_SHARING_ID);
-			output.add(t);
+			//only update tickets that do not have a sharing agreement
+			if (ticketObj.optJSONArray("sharing_agreement_ids") == null) {
+				Ticket t = new Ticket();
+				t.setId(ticketObj.getInt("id"));
+				t.setStatus("new");
+				t.setSharing_agreement_ids(CLIQZ_SHARING_ID);
+				output.add(t);
+			}
 		}
 		return output;
 	}
@@ -298,6 +301,11 @@ public class Ticket implements AsyncRequest {
 	 * @param tickets
 	 */
 	private static void putNewTickets(ArrayList<Ticket> tickets) {
+		if (tickets.isEmpty()) {
+			System.out.println("No new tickets to update.");
+			return;
+		}
+
 		System.out.println("BULK UPDATING NEW TICKETS...");
 
 		String ghosteryZendeskAPI = "https://ghostery.zendesk.com/api/v2/tickets/update_many.json";
