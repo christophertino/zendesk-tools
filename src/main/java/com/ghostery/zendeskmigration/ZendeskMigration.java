@@ -1,7 +1,10 @@
 package com.ghostery.zendeskmigration;
 
+import com.amazonaws.services.lambda.runtime.Context;
+import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.ghostery.zendeskmigration.interfaces.AsyncRequest;
 
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
 /**
@@ -13,9 +16,9 @@ import java.util.concurrent.ExecutionException;
  * See https://www.ghostery.com/eula for license.
  */
 
-public class ZendeskMigration implements AsyncRequest {
+public class ZendeskMigration implements AsyncRequest, RequestHandler<Map<String,Object>, String> {
 
-	private ZendeskMigration() throws ExecutionException, InterruptedException {
+	public ZendeskMigration() throws ExecutionException, InterruptedException {
 		//GET and POST all categories, sections and articles
 //		ArrayList<Article> articles = Article.getArticles();
 //		Article.postArticles(articles);
@@ -32,7 +35,7 @@ public class ZendeskMigration implements AsyncRequest {
 //		Ticket.getTickets();
 
 		//Update existing tickets
-		Ticket.getNewTickets();
+//		Ticket.getNewTickets();
 	}
 
 	public static void main(String[] args) {
@@ -41,5 +44,22 @@ public class ZendeskMigration implements AsyncRequest {
 		} catch (ExecutionException | InterruptedException e) {
 			e.printStackTrace();
 		}
+	}
+
+	/**
+	 * Entry point for AWS Lambda execution
+	 * @param input     set this to a Map<> to handle JSON input
+	 * @param context
+	 * @return
+	 */
+	@Override
+	public String handleRequest(Map<String,Object> input, Context context) {
+		context.getLogger().log("AWS Lambda Initialized...");
+		try {
+			Ticket.getNewTickets();
+		} catch (ExecutionException | InterruptedException e) {
+			e.printStackTrace();
+		}
+		return "Lambda Completed.";
 	}
 }

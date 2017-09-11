@@ -267,7 +267,6 @@ public class Ticket implements AsyncRequest {
 			currentPage++;
 			ghosteryZendeskAPI = responseObject.optString("next_page", null);
 		}
-		System.exit(0);
 	}
 
 	/**
@@ -284,7 +283,7 @@ public class Ticket implements AsyncRequest {
 			JSONObject ticketObj = tickets.getJSONObject(i);
 
 			//only update tickets that do not have a sharing agreement
-			if (ticketObj.optJSONArray("sharing_agreement_ids") == null) {
+			if (ticketObj.optJSONArray("sharing_agreement_ids").length() == 0) {
 				Ticket t = new Ticket();
 				t.setId(ticketObj.getInt("id"));
 				t.setStatus("new");
