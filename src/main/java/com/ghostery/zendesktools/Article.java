@@ -1,6 +1,6 @@
-package com.ghostery.zendeskmigration;
+package com.ghostery.zendesktools;
 
-import com.ghostery.zendeskmigration.interfaces.AsyncRequest;
+import com.ghostery.zendesktools.interfaces.AsyncRequest;
 import com.google.gson.Gson;
 import org.asynchttpclient.Request;
 import org.asynchttpclient.Response;
@@ -12,13 +12,16 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
+import static com.ghostery.zendesktools.interfaces.Constants.CURRENT_API_URL;
+import static com.ghostery.zendesktools.interfaces.Constants.LEGACY_API_URL;
+import static com.ghostery.zendesktools.interfaces.Constants.NEW_AUTHOR_ID;
+
 /**
- * Zendesk Migration
+ * Ghostery Zendesk Tools
  *
- * @author Christopher Tino
+ * @author Ghostery Engineering
  *
- * Copyright 2017 Ghostery, Inc. All rights reserved.
- * See https://www.ghostery.com/eula for license.
+ * Copyright 2018 Ghostery, Inc. All rights reserved.
  */
 public class Article implements AsyncRequest {
 
@@ -36,10 +39,10 @@ public class Article implements AsyncRequest {
 	 */
 	protected static ArrayList<Article> getArticles() throws ExecutionException, InterruptedException {
 		System.out.println("GETTING ARTICLES...");
-		String evidonZendeskAPI = "https://evidon.zendesk.com/api/v2/help_center/en-us/articles.json?include=categories,sections&per_page=100";
+		String legacyURL = LEGACY_API_URL + "/help_center/en-us/articles.json?include=categories,sections&per_page=100";
 
 		//create the HTTP request
-		Request request = AsyncRequest.buildEvidonRequest(evidonZendeskAPI);
+		Request request = AsyncRequest.buildLegacyRequest(legacyURL);
 		Future<Response> future = AsyncRequest.doAsyncRequest(request);
 		Response result = future.get();
 
@@ -94,10 +97,10 @@ public class Article implements AsyncRequest {
 			//build articles into json for POST
 			String body = "{\"article\":" + a.toString() + "}";
 
-			String ghosteryZendeskAPI = "https://ghostery.zendesk.com/api/v2/help_center/en-us/sections/" + a.section_id + "articles.json";
+			String currentURL = CURRENT_API_URL + "/help_center/en-us/sections/" + a.section_id + "articles.json";
 
 			//create the HTTP request
-			Request request = AsyncRequest.buildGhosteryRequest("POST", body, ghosteryZendeskAPI);
+			Request request = AsyncRequest.buildCurrentUpdateRequest("POST", body, currentURL);
 			Future<Response> future = AsyncRequest.doAsyncRequest(request);
 			Response result;
 
@@ -107,6 +110,48 @@ public class Article implements AsyncRequest {
 			} catch (Exception e) {
 				e.printStackTrace();
 				System.out.printf("Article not uploaded: %s", a.toString());
+				future.cancel(true);
+			}
+		}
+	}
+
+	/**
+	 * GET all Articles, update author_id and PUT back
+	 */
+	protected static void updateArtcleAuthor() throws ExecutionException, InterruptedException {
+		System.out.println("GETTING ALL ARTICLES...");
+		String currentURL = CURRENT_API_URL + "/help_center/en-us/articles.json";
+
+		//create the HTTP request
+		Request request = AsyncRequest.buildCurrentGetRequest(currentURL);
+		Future<Response> future = AsyncRequest.doAsyncRequest(request);
+		Response result = future.get();
+
+		//Convert response to JSON Object and extract articles
+		JSONObject responseObject = new JSONObject(result.getResponseBody());
+		JSONArray responseArticleArray = responseObject.getJSONArray("articles");
+
+		//update each article
+		for (int i = 0; i < responseArticleArray.length(); i++) {
+			JSONObject article = responseArticleArray.getJSONObject(i);
+			Long articleID = article.getLong("id");
+
+			//build article into json
+			String body = "{\"article\": {\"author_id\":" + NEW_AUTHOR_ID + "}}";
+
+			String updateURL = CURRENT_API_URL + "/help_center/en-us/articles/" + articleID + ".json";
+
+			//create the HTTP request
+			Request update = AsyncRequest.buildCurrentUpdateRequest("PUT", body, updateURL);
+			Future<Response> futureUpdate = AsyncRequest.doAsyncRequest(update);
+			Response resultUpdate;
+
+			try {
+				resultUpdate = futureUpdate.get(15, TimeUnit.SECONDS);
+				System.out.println("Article author_id updated: " + resultUpdate.getStatusCode() + " " + resultUpdate.getStatusText());
+			} catch (Exception e) {
+				e.printStackTrace();
+				System.out.printf("Article author_id not updated: %s", articleID);
 				future.cancel(true);
 			}
 		}

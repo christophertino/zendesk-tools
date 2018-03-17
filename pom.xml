@@ -4,8 +4,8 @@
 		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<groupId>com.ghostery.zendeskmigration</groupId>
-	<artifactId>zendesk-migration</artifactId>
+	<groupId>com.ghostery.zendesktools</groupId>
+	<artifactId>zendesk-tools</artifactId>
 	<version>1.0</version>
 
 	<build>
@@ -27,7 +27,7 @@
 					<archive>
 						<manifest>
 							<addClasspath>true</addClasspath>
-							<mainClass>com.ghostery.zendeskmigration.ZendeskMigration</mainClass>
+							<mainClass>com.ghostery.zendesktools.ZendeskTools</mainClass>
 						</manifest>
 					</archive>
 				</configuration>

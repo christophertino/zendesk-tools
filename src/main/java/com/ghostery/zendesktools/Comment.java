@@ -1,6 +1,6 @@
-package com.ghostery.zendeskmigration;
+package com.ghostery.zendesktools;
 
-import com.ghostery.zendeskmigration.interfaces.AsyncRequest;
+import com.ghostery.zendesktools.interfaces.AsyncRequest;
 import com.google.gson.Gson;
 import org.apache.commons.text.StringEscapeUtils;
 import org.asynchttpclient.Request;
@@ -13,13 +13,15 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
+import static com.ghostery.zendesktools.interfaces.Constants.CURRENT_API_URL;
+import static com.ghostery.zendesktools.interfaces.Constants.LEGACY_API_URL;
+
 /**
- * Zendesk Migration
+ * Ghostery Zendesk Tools
  *
- * @author Christopher Tino
+ * @author Ghostery Engineering
  *
- * Copyright 2017 Ghostery, Inc. All rights reserved.
- * See https://www.ghostery.com/eula for license.
+ * Copyright 2018 Ghostery, Inc. All rights reserved.
  */
 
 public class Comment implements AsyncRequest {
@@ -33,17 +35,17 @@ public class Comment implements AsyncRequest {
 
 	/**
 	 * Get an array of all Comments attached to a ticket
-	 * @param ticketID      from Evidon account
+	 * @param ticketID      from legacy account
 	 * @return
 	 * @throws ExecutionException
 	 * @throws InterruptedException
 	 */
 	protected static ArrayList<Comment> getComments(Integer ticketID) throws ExecutionException, InterruptedException {
 		System.out.println("GETTING COMMENTS FOR TICKET " + ticketID + "...");
-		String evidonZendeskAPI = "https://evidon.zendesk.com/api/v2/tickets/" + ticketID + "/comments.json";
+		String legacyURL = LEGACY_API_URL + "/tickets/" + ticketID + "/comments.json";
 
 		//create the HTTP request
-		Request request = AsyncRequest.buildEvidonRequest(evidonZendeskAPI);
+		Request request = AsyncRequest.buildLegacyRequest(legacyURL);
 		Future<Response> future = AsyncRequest.doAsyncRequest(request);
 		Response result = future.get();
 
@@ -86,7 +88,7 @@ public class Comment implements AsyncRequest {
 	protected static void updateComments(Integer newTicketID, Integer oldTicketID) throws ExecutionException, InterruptedException {
 		System.out.println("UPDATING TICKET COMMENTS...");
 
-		String ghosteryZendeskAPI = "https://ghostery.zendesk.com/api/v2/tickets/" + newTicketID + ".json";
+		String currentURL = CURRENT_API_URL + "/tickets/" + newTicketID + ".json";
 
 		ArrayList<Comment> comments = getComments(oldTicketID);
 		//start at index 1, since the first comment was added during ticket creation
@@ -94,7 +96,7 @@ public class Comment implements AsyncRequest {
 			String body = "{\"ticket\": {\"comment\":" + comments.get(i).toString() + "}}";
 
 			//create the HTTP request
-			Request request = AsyncRequest.buildGhosteryRequest("PUT", body, ghosteryZendeskAPI);
+			Request request = AsyncRequest.buildCurrentUpdateRequest("PUT", body, currentURL);
 			Future<Response> future = AsyncRequest.doAsyncRequest(request);
 			Response result;
 

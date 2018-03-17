@@ -1,6 +1,6 @@
-package com.ghostery.zendeskmigration;
+package com.ghostery.zendesktools;
 
-import com.ghostery.zendeskmigration.interfaces.AsyncRequest;
+import com.ghostery.zendesktools.interfaces.AsyncRequest;
 import com.google.gson.Gson;
 import org.apache.commons.text.StringEscapeUtils;
 import org.asynchttpclient.Request;
@@ -13,16 +13,15 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
-import static com.ghostery.zendeskmigration.User.userIDs;
-import static com.ghostery.zendeskmigration.interfaces.Constants.CLIQZ_SHARING_ID;
+import static com.ghostery.zendesktools.User.userIDs;
+import static com.ghostery.zendesktools.interfaces.Constants.*;
 
 /**
- * Zendesk Migration
+ * Ghostery Zendesk Tools
  *
- * @author Christopher Tino
+ * @author Ghostery Engineering
  *
- * Copyright 2017 Ghostery, Inc. All rights reserved.
- * See https://www.ghostery.com/eula for license.
+ * Copyright 2018 Ghostery, Inc. All rights reserved.
  */
 
 public class Ticket implements AsyncRequest {
@@ -50,10 +49,10 @@ public class Ticket implements AsyncRequest {
 	 */
 	protected static Ticket getTicket(Integer ticketID) throws ExecutionException, InterruptedException {
 		System.out.println("GET TICKET " + ticketID + "...");
-		String evidonZendeskAPI = "https://evidon.zendesk.com/api/v2/tickets/" + ticketID + ".json?include=users,comment_count";
+		String legacyURL = LEGACY_API_URL + "/tickets/" + ticketID + ".json?include=users,comment_count";
 
 		//create the HTTP request
-		Request request = AsyncRequest.buildEvidonRequest(evidonZendeskAPI);
+		Request request = AsyncRequest.buildLegacyRequest(legacyURL);
 		Future<Response> future = AsyncRequest.doAsyncRequest(request);
 		Response result = future.get();
 
@@ -110,13 +109,13 @@ public class Ticket implements AsyncRequest {
 	protected static void postTicket(Ticket ticket) {
 		System.out.println("POST TICKET...");
 
-		String ghosteryZendeskAPI = "https://ghostery.zendesk.com/api/v2/imports/tickets.json";
+		String currentURL = CURRENT_API_URL + "/imports/tickets.json";
 
 		//build Ticket into json
 		String body = "{\"ticket\":" + ticket.toString() + "}";
 
 		//create the HTTP request
-		Request request = AsyncRequest.buildGhosteryRequest("POST", body, ghosteryZendeskAPI);
+		Request request = AsyncRequest.buildCurrentUpdateRequest("POST", body, currentURL);
 		Future<Response> future = AsyncRequest.doAsyncRequest(request);
 		Response result;
 
@@ -127,7 +126,7 @@ public class Ticket implements AsyncRequest {
 				Integer ticketID = responseObject.getJSONObject("ticket").getInt("id");
 				System.out.println("Post Ticket: "  + result.getStatusCode() + " " + result.getStatusText() + " ID: " + ticketID);
 				//build out comment for the new ticket
-				Comment.updateComments(ticketID, ticket.legacyID); //new ticket ID, ticketID from original Evidon ticket
+				Comment.updateComments(ticketID, ticket.legacyID); //new ticket ID, ticketID from original ticket
 			} else {
 				System.out.println("Post Ticket Error: "  + result.getStatusCode() + " " + result.getStatusText());
 			}
@@ -146,13 +145,13 @@ public class Ticket implements AsyncRequest {
 	 */
 	protected static void getTickets() throws ExecutionException, InterruptedException {
 		Integer currentPage = 1;
-		String evidonZendeskAPI = "https://evidon.zendesk.com/api/v2/tickets.json?include=users,comment_count&per_page=100&page=" + currentPage;
+		String legacyURL = LEGACY_API_URL + "/tickets.json?include=users,comment_count&per_page=100&page=" + currentPage;
 
-		while(evidonZendeskAPI != null) {
+		while(legacyURL != null) {
 			System.out.println("GETTING TICKETS, PAGE " + currentPage + "...");
 
 			//create the HTTP request
-			Request request = AsyncRequest.buildEvidonRequest(evidonZendeskAPI);
+			Request request = AsyncRequest.buildLegacyRequest(legacyURL);
 			Future<Response> future = AsyncRequest.doAsyncRequest(request);
 			Response result = future.get();
 
@@ -173,7 +172,7 @@ public class Ticket implements AsyncRequest {
 			//pause for 30sec so we don't go over the API rate limit
 			Thread.sleep(30000);
 			currentPage++;
-			evidonZendeskAPI = responseObject.optString("next_page", null);
+			legacyURL = responseObject.optString("next_page", null);
 		}
 	}
 
@@ -218,12 +217,12 @@ public class Ticket implements AsyncRequest {
 	private static void postTickets(ArrayList<Ticket> tickets) {
 		System.out.println("BULK IMPORTING TICKETS...");
 
-		String ghosteryZendeskAPI = "https://ghostery.zendesk.com/api/v2/imports/tickets/create_many.json";
+		String currentURL = CURRENT_API_URL + "/imports/tickets/create_many.json";
 
 		String body = "{\"tickets\":" + tickets.toString() + "}";
 
 		//create the HTTP request
-		Request request = AsyncRequest.buildGhosteryRequest("POST", body, ghosteryZendeskAPI);
+		Request request = AsyncRequest.buildCurrentUpdateRequest("POST", body, currentURL);
 		Future<Response> future = AsyncRequest.doAsyncRequest(request);
 		Response result;
 
@@ -243,15 +242,14 @@ public class Ticket implements AsyncRequest {
 	 * @throws InterruptedException
 	 */
 	protected static void getNewTickets() throws ExecutionException, InterruptedException {
-		Long viewID = 114103705574L; // "New Tickets" view in Zendesk Admin
 		Integer currentPage = 1;
-		String ghosteryZendeskAPI = "https://ghostery.zendesk.com/api/v2/views/" + viewID + "/tickets.json?&per_page=100&page=" + currentPage;
+		String currentURL = CURRENT_API_URL + "/views/" + NEW_TICKETS_VIEW_ID + "/tickets.json?&per_page=100&page=" + currentPage;
 
-		while(ghosteryZendeskAPI != null) {
+		while(currentURL != null) {
 			System.out.println("GETTING NEW TICKETS, PAGE " + currentPage + "...");
 
 			//create the HTTP request
-			Request request = AsyncRequest.buildGhosteryRequest("GET", "", ghosteryZendeskAPI);
+			Request request = AsyncRequest.buildCurrentUpdateRequest("GET", "", currentURL);
 			Future<Response> future = AsyncRequest.doAsyncRequest(request);
 			Response result = future.get();
 
@@ -265,7 +263,7 @@ public class Ticket implements AsyncRequest {
 			putNewTickets(tickets);
 
 			currentPage++;
-			ghosteryZendeskAPI = responseObject.optString("next_page", null);
+			currentURL = responseObject.optString("next_page", null);
 		}
 	}
 
@@ -287,7 +285,7 @@ public class Ticket implements AsyncRequest {
 				Ticket t = new Ticket();
 				t.setId(ticketObj.getInt("id"));
 				t.setStatus("new");
-				t.setSharing_agreement_ids(CLIQZ_SHARING_ID);
+				t.setSharing_agreement_ids(SHARING_ID);
 				output.add(t);
 			}
 		}
@@ -306,12 +304,12 @@ public class Ticket implements AsyncRequest {
 
 		System.out.println("BULK UPDATING NEW TICKETS...");
 
-		String ghosteryZendeskAPI = "https://ghostery.zendesk.com/api/v2/tickets/update_many.json";
+		String currentURL = CURRENT_API_URL + "/tickets/update_many.json";
 
 		String body = "{\"tickets\":" + tickets.toString() + "}";
 
 		//create the HTTP request
-		Request request = AsyncRequest.buildGhosteryRequest("PUT", body, ghosteryZendeskAPI);
+		Request request = AsyncRequest.buildCurrentUpdateRequest("PUT", body, currentURL);
 		Future<Response> future = AsyncRequest.doAsyncRequest(request);
 		Response result;
 

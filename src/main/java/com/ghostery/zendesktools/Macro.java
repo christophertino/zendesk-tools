@@ -1,6 +1,6 @@
-package com.ghostery.zendeskmigration;
+package com.ghostery.zendesktools;
 
-import com.ghostery.zendeskmigration.interfaces.AsyncRequest;
+import com.ghostery.zendesktools.interfaces.AsyncRequest;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import org.asynchttpclient.Request;
@@ -14,13 +14,15 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
+import static com.ghostery.zendesktools.interfaces.Constants.CURRENT_API_URL;
+import static com.ghostery.zendesktools.interfaces.Constants.LEGACY_API_URL;
+
 /**
- * Zendesk Migration
+ * Ghostery Zendesk Tools
  *
- * @author Christopher Tino
+ * @author Ghostery Engineering
  *
- * Copyright 2017 Ghostery, Inc. All rights reserved.
- * See https://www.ghostery.com/eula for license.
+ * Copyright 2018 Ghostery, Inc. All rights reserved.
  */
 
 public class Macro implements AsyncRequest {
@@ -39,10 +41,10 @@ public class Macro implements AsyncRequest {
 	 */
 	protected static ArrayList<Macro> getMacros() throws ExecutionException, InterruptedException {
 		System.out.println("GETTING MACROS...");
-		String evidonZendeskAPI = "https://evidon.zendesk.com/api/v2/macros.json";
+		String legacyURL = LEGACY_API_URL + "/macros.json";
 
 		//create the HTTP request
-		Request request = AsyncRequest.buildEvidonRequest(evidonZendeskAPI);
+		Request request = AsyncRequest.buildLegacyRequest(legacyURL);
 		Future<Response> future = AsyncRequest.doAsyncRequest(request);
 		Response result = future.get();
 
@@ -84,14 +86,14 @@ public class Macro implements AsyncRequest {
 	protected static void postMacros(ArrayList<Macro> macros) {
 		System.out.println("POSTING MACROS...");
 
-		String ghosteryZendeskAPI = "https://ghostery.zendesk.com/api/v2/macros.json";
+		String currentURL = CURRENT_API_URL + "/macros.json";
 
 		for (Macro m : macros) {
 			//build macros into json for POST
 			String body = "{\"macro\":" + m.toString() + "}";
 
 			//create the HTTP request
-			Request request = AsyncRequest.buildGhosteryRequest("POST", body, ghosteryZendeskAPI);
+			Request request = AsyncRequest.buildCurrentUpdateRequest("POST", body, currentURL);
 			Future<Response> future = AsyncRequest.doAsyncRequest(request);
 			Response result;
 

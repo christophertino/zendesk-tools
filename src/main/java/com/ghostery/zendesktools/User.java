@@ -1,6 +1,6 @@
-package com.ghostery.zendeskmigration;
+package com.ghostery.zendesktools;
 
-import com.ghostery.zendeskmigration.interfaces.AsyncRequest;
+import com.ghostery.zendesktools.interfaces.AsyncRequest;
 import com.google.gson.Gson;
 import org.apache.commons.text.StringEscapeUtils;
 import org.asynchttpclient.Request;
@@ -13,13 +13,14 @@ import java.util.HashMap;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
+import static com.ghostery.zendesktools.interfaces.Constants.CURRENT_API_URL;
+
 /**
- * Zendesk Migration
+ * Ghostery Zendesk Tools
  *
- * @author Christopher Tino
+ * @author Ghostery Engineering
  *
- * Copyright 2017 Ghostery, Inc. All rights reserved.
- * See https://www.ghostery.com/eula for license.
+ * Copyright 2018 Ghostery, Inc. All rights reserved.
  */
 
 public class User implements AsyncRequest {
@@ -63,14 +64,14 @@ public class User implements AsyncRequest {
 	protected static void postUsers(ArrayList<User> users) {
 		System.out.println("POSTING USERS...");
 
-		String ghosteryZendeskAPI = "https://ghostery.zendesk.com/api/v2/users/create_or_update.json";
+		String currentURL = CURRENT_API_URL + "/users/create_or_update.json";
 
 		for (User u : users) {
 			//build Users into json for POST
 			String body = "{\"user\":" + u.toString() + "}";
 
 			//create the HTTP request
-			Request request = AsyncRequest.buildGhosteryRequest("POST", body, ghosteryZendeskAPI);
+			Request request = AsyncRequest.buildCurrentUpdateRequest("POST", body, currentURL);
 			Future<Response> future = AsyncRequest.doAsyncRequest(request);
 			Response result;
 

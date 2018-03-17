@@ -1,6 +1,6 @@
-package com.ghostery.zendeskmigration;
+package com.ghostery.zendesktools;
 
-import com.ghostery.zendeskmigration.interfaces.AsyncRequest;
+import com.ghostery.zendesktools.interfaces.AsyncRequest;
 import com.google.gson.Gson;
 import org.asynchttpclient.Request;
 import org.asynchttpclient.Response;
@@ -12,13 +12,14 @@ import java.util.HashMap;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
+import static com.ghostery.zendesktools.interfaces.Constants.CURRENT_API_URL;
+
 /**
- * Zendesk Migration
+ * Ghostery Zendesk Tools
  *
- * @author Christopher Tino
+ * @author Ghostery Engineering
  *
- * Copyright 2017 Ghostery, Inc. All rights reserved.
- * See https://www.ghostery.com/eula for license.
+ * Copyright 2018 Ghostery, Inc. All rights reserved.
  */
 public class Section implements AsyncRequest {
 
@@ -63,10 +64,10 @@ public class Section implements AsyncRequest {
 			//build sections into json for POST
 			String body = "{\"section\":" + s.toString() + "}";
 
-			String ghosteryZendeskAPI = "https://ghostery.zendesk.com/api/v2/help_center/en-us/categories/" + s.category_id + "sections.json";
+			String currentURL = CURRENT_API_URL + "/help_center/en-us/categories/" + s.category_id + "sections.json";
 
 			//create the HTTP request
-			Request request = AsyncRequest.buildGhosteryRequest("POST", body, ghosteryZendeskAPI);
+			Request request = AsyncRequest.buildCurrentUpdateRequest("POST", body, currentURL);
 			Future<Response> future = AsyncRequest.doAsyncRequest(request);
 			Response result;
 

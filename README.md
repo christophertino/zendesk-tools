@@ -1,6 +1,11 @@
-## Zendesk Migration Tool
+## Zendesk Migration and API Tools
 
-Migrate tickets, users and Help Center content between Zendesk accounts.
+Quick and dirty API tools for Zendesk.
+
++ Migrate tickets, users and Help Center content between Zendesk accounts
++ Batch update existing tickets
++ Share new tickets with a sister account that was an existing sharing agreement
++ AWS Lambda support
 
 ### Configuration
 
@@ -8,7 +13,7 @@ Migrate tickets, users and Help Center content between Zendesk accounts.
 
 2. Import dependencies from Maven.
 
-3. For MacOS, you'll need to bump the limit on the maximum number of open files (for using Ticket.getTickets())
+3. For MacOS, you may need to bump the limit on the maximum number of open files (for using Ticket.getTickets())
 
 ```bash
 $ echo kern.maxfiles=65536 | sudo tee -a /etc/sysctl.conf
@@ -22,10 +27,8 @@ $ ulimit -n 65536 65536
 
 1. Run `mvn package`
 
-2. Execute `java -jar target/zendesk-migration-1.0.jar`
+2. Execute `java -jar target/zendesk-tools-1.0.jar`
 
 ### License
 
-Copyright 2017 Ghostery, Inc. All rights reserved.
-
-See https://www.ghostery.com/eula for license
+Copyright 2018 Ghostery, Inc. All rights reserved.

@@ -1,24 +1,23 @@
-package com.ghostery.zendeskmigration;
+package com.ghostery.zendesktools;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
-import com.ghostery.zendeskmigration.interfaces.AsyncRequest;
+import com.ghostery.zendesktools.interfaces.AsyncRequest;
 
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
 /**
- * Zendesk Migration
+ * Zendesk Tools
  *
- * @author Christopher Tino
+ * @author Ghostery Engineering
  *
- * Copyright 2017 Ghostery, Inc. All rights reserved.
- * See https://www.ghostery.com/eula for license.
+ * Copyright 2018 Ghostery, Inc. All rights reserved.
  */
 
-public class ZendeskMigration implements AsyncRequest, RequestHandler<Map<String,Object>, String> {
+public class ZendeskTools implements AsyncRequest, RequestHandler<Map<String,Object>, String> {
 
-	public ZendeskMigration() throws ExecutionException, InterruptedException {
+	public ZendeskTools() throws ExecutionException, InterruptedException {
 		//GET and POST all categories, sections and articles
 //		ArrayList<Article> articles = Article.getArticles();
 //		Article.postArticles(articles);
@@ -40,7 +39,7 @@ public class ZendeskMigration implements AsyncRequest, RequestHandler<Map<String
 
 	public static void main(String[] args) {
 		try {
-			new ZendeskMigration();
+			new ZendeskTools();
 		} catch (ExecutionException | InterruptedException e) {
 			e.printStackTrace();
 		}
