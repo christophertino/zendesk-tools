@@ -6,11 +6,11 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <module name="zendesk-migration" />
+        <module name="zendesk-tools" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
-      <module name="zendesk-migration" target="1.8" />
+      <module name="zendesk-tools" target="1.8" />
     </bytecodeTargetLevel>
   </component>
 </project>

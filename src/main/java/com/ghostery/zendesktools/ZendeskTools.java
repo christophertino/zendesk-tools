@@ -35,6 +35,9 @@ public class ZendeskTools implements AsyncRequest, RequestHandler<Map<String,Obj
 
 		//Update existing tickets
 //		Ticket.getNewTickets();
+
+		//Bulk change all article authors to Ghostery Support
+		Article.updateArtcleAuthor();
 	}
 
 	public static void main(String[] args) {

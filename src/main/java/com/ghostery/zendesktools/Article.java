@@ -120,7 +120,7 @@ public class Article implements AsyncRequest {
 	 */
 	protected static void updateArtcleAuthor() throws ExecutionException, InterruptedException {
 		System.out.println("GETTING ALL ARTICLES...");
-		String currentURL = CURRENT_API_URL + "/help_center/en-us/articles.json";
+		String currentURL = CURRENT_API_URL + "/help_center/en-us/articles.json?per_page=100";
 
 		//create the HTTP request
 		Request request = AsyncRequest.buildCurrentGetRequest(currentURL);

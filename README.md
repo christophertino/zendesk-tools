@@ -1,6 +1,6 @@
 ## Zendesk Migration and API Tools
 
-Quick and dirty API tools for Zendesk.
+Quick and dirty API tools for Zendesk
 
 + Migrate tickets, users and Help Center content between Zendesk accounts
 + Batch update existing tickets
