@@ -1,7 +1,7 @@
-package com.ghostery.zendesktools;
+package com.ghostery.zendesktools.actions;
 
 import com.ghostery.zendesktools.interfaces.AsyncRequest;
-import com.google.gson.Gson;
+import com.ghostery.zendesktools.models.User;
 import org.apache.commons.text.StringEscapeUtils;
 import org.asynchttpclient.Request;
 import org.asynchttpclient.Response;
@@ -9,47 +9,34 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import static com.ghostery.zendesktools.interfaces.Constants.CURRENT_API_URL;
 
 /**
- * Ghostery Zendesk Tools
+ * User Controller
  *
  * @author Ghostery Engineering
  *
  * Copyright 2018 Ghostery, Inc. All rights reserved.
  */
-
-public class User implements AsyncRequest {
-
-	protected static HashMap<Integer, Long> userIDs = new HashMap<>();
-	private String name;
-	private String email;
-	private String role;
-	private Boolean verified;
-	private transient Integer legacyId; //ignore this when serializing
-
-	public User() {}
-
+public class UserController {
 	/**
 	 * Factory function to generate Users from JSONArray
 	 * @param users
 	 */
-	protected static ArrayList<User> buildUsers(JSONArray users) {
+	public static ArrayList<User> buildUsers(JSONArray users) {
 		ArrayList<User> output = new ArrayList<>();
 		for (int i = 0; i < users.length(); i++) {
 			JSONObject user = users.getJSONObject(i);
-			User u = new User();
-
-			u.setName(StringEscapeUtils.escapeHtml4(user.getString("name"))); //escape special chars
-			u.setEmail(user.getString("email"));
-			u.setRole(user.getString("role"));
-			u.setVerified(true); //prevent sending verification email
-			u.setLegacyId(user.getInt("id"));
-
+			User u = new User(
+					StringEscapeUtils.escapeHtml4(user.getString("name")), //escape special chars
+					user.getString("email"),
+					user.getString("role"),
+					true, //prevent sending verification email
+					user.getInt("id")
+			);
 			output.add(u);
 		}
 		return output;
@@ -61,7 +48,7 @@ public class User implements AsyncRequest {
 	 * @param users
 	 * @return
 	 */
-	protected static void postUsers(ArrayList<User> users) {
+	public static void postUsers(ArrayList<User> users) {
 		System.out.println("POSTING USERS...");
 
 		String currentURL = CURRENT_API_URL + "/users/create_or_update.json";
@@ -81,9 +68,9 @@ public class User implements AsyncRequest {
 				if (result.getStatusCode() <= 201) { //200 update, 201 create
 					Long newUserId = responseObject.getJSONObject("user").getLong("id");
 					//map old userID to new userID
-					System.out.println("Mapping old userID: " + u.legacyId + " to new userID: " + newUserId);
-					userIDs.put(u.legacyId, newUserId);
-					System.out.println("Post User:" + result.getStatusCode() + " " + result.getStatusText() + " ID: " + userIDs.get(u.legacyId));
+					System.out.println("Mapping old userID: " + u.getLegacyId() + " to new userID: " + newUserId);
+					User.userIDs.put(u.getLegacyId(), newUserId);
+					System.out.println("Post User:" + result.getStatusCode() + " " + result.getStatusText() + " ID: " + User.userIDs.get(u.getLegacyId()));
 				} else {
 					System.out.println("Post User error " + result.getStatusCode() + " " + result.getStatusText());
 				}
@@ -93,31 +80,5 @@ public class User implements AsyncRequest {
 				future.cancel(true);
 			}
 		}
-	}
-
-	@Override
-	public String toString(){
-		Gson gson = new Gson();
-		return gson.toJson(this);
-	}
-
-	private void setName(String name) {
-		this.name = name;
-	}
-
-	private void setEmail(String email) {
-		this.email = email;
-	}
-
-	private void setRole(String role) {
-		this.role = role;
-	}
-
-	private void setVerified(Boolean verified) {
-		this.verified = verified;
-	}
-
-	private void setLegacyId(Integer legacyId) {
-		this.legacyId = legacyId;
 	}
 }

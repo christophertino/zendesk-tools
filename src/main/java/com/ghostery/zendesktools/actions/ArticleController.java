@@ -1,7 +1,9 @@
-package com.ghostery.zendesktools;
+package com.ghostery.zendesktools.actions;
 
 import com.ghostery.zendesktools.interfaces.AsyncRequest;
-import com.google.gson.Gson;
+import com.ghostery.zendesktools.models.Article;
+import com.ghostery.zendesktools.models.Category;
+import com.ghostery.zendesktools.models.Section;
 import org.asynchttpclient.Request;
 import org.asynchttpclient.Response;
 import org.json.JSONArray;
@@ -17,27 +19,19 @@ import static com.ghostery.zendesktools.interfaces.Constants.LEGACY_API_URL;
 import static com.ghostery.zendesktools.interfaces.Constants.NEW_AUTHOR_ID;
 
 /**
- * Ghostery Zendesk Tools
+ * Article Controller
  *
  * @author Ghostery Engineering
  *
  * Copyright 2018 Ghostery, Inc. All rights reserved.
  */
-public class Article implements AsyncRequest {
-
-	private String title;
-	private String body;
-	private Boolean comments_disabled;
-	private transient Long section_id;
-
-	public Article() {}
-
+public class ArticleController {
 	/**
 	 * Retrieve a batch of 100 articles along with associated categories and sections
 	 * @throws ExecutionException
 	 * @throws InterruptedException
 	 */
-	protected static ArrayList<Article> getArticles() throws ExecutionException, InterruptedException {
+	public ArrayList<Article> getArticles() throws ExecutionException, InterruptedException {
 		System.out.println("GETTING ARTICLES...");
 		String legacyURL = LEGACY_API_URL + "/help_center/en-us/articles.json?include=categories,sections&per_page=100";
 
@@ -53,12 +47,12 @@ public class Article implements AsyncRequest {
 		JSONArray responseArticleArray = responseObject.getJSONArray("articles");
 
 		//build new Categories and post to Zendesk
-		ArrayList<Category> categoryList = Category.buildCategories(responseCategoryArray);
-		Category.postCategories(categoryList);
+		ArrayList<Category> categoryList = CategoryController.buildCategories(responseCategoryArray);
+		CategoryController.postCategories(categoryList);
 
 		//build new Sections and post to Zendesk
-		ArrayList<Section> sectionList = Section.buildSections(responseSectionArray);
-		Section.postSections(sectionList);
+		ArrayList<Section> sectionList = SectionController.buildSections(responseSectionArray);
+		SectionController.postSections(sectionList);
 
 		ArrayList<Article> articles = buildArticles(responseArticleArray);
 		System.out.println("ARTICLES: " + articles.toString());
@@ -70,16 +64,16 @@ public class Article implements AsyncRequest {
 	 * Factory function to generate Articles from JSONArray
 	 * @param articles
 	 */
-	private static ArrayList<Article> buildArticles(JSONArray articles) {
+	private ArrayList<Article> buildArticles(JSONArray articles) {
 		ArrayList<Article> output = new ArrayList<>();
 		for (int i = 0; i < articles.length(); i++) {
 			JSONObject article = articles.getJSONObject(i);
-			Article a = new Article();
-
-			a.setTitle(article.getString("title"));
-			a.setBody(article.getString("body"));
-			a.setSection_id(Section.sectionIDs.get(article.getInt("section_id"))); //get new section_id from map
-			a.setComments_disabled(true);
+			Article a = new Article(
+					article.getString("title"),
+					article.getString("body"),
+					true,
+					Section.sectionIDs.get(article.getInt("section_id")) //get new section_id from map
+			);
 
 			output.add(a);
 		}
@@ -90,14 +84,14 @@ public class Article implements AsyncRequest {
 	 * POST an ArrayList of Articles to Zendesk, one-by-one,
 	 * @param articles  articles, sections or categories
 	 */
-	protected static void postArticles(ArrayList<Article> articles) {
+	public void postArticles(ArrayList<Article> articles) {
 		System.out.println("POSTING ARTICLES...");
 
 		for (Article a : articles) {
 			//build articles into json for POST
 			String body = "{\"article\":" + a.toString() + "}";
 
-			String currentURL = CURRENT_API_URL + "/help_center/en-us/sections/" + a.section_id + "articles.json";
+			String currentURL = CURRENT_API_URL + "/help_center/en-us/sections/" + a.getSection_id() + "articles.json";
 
 			//create the HTTP request
 			Request request = AsyncRequest.buildCurrentUpdateRequest("POST", body, currentURL);
@@ -118,7 +112,7 @@ public class Article implements AsyncRequest {
 	/**
 	 * GET all Articles, update author_id and PUT back
 	 */
-	protected static void updateArtcleAuthor() throws ExecutionException, InterruptedException {
+	public void updateArtcleAuthor() throws ExecutionException, InterruptedException {
 		System.out.println("GETTING ALL ARTICLES...");
 		String currentURL = CURRENT_API_URL + "/help_center/en-us/articles.json?per_page=100";
 
@@ -155,27 +149,5 @@ public class Article implements AsyncRequest {
 				future.cancel(true);
 			}
 		}
-	}
-
-	@Override
-	public String toString(){
-		Gson gson = new Gson();
-		return gson.toJson(this);
-	}
-
-	private void setTitle(String title) {
-		this.title = title;
-	}
-
-	private void setBody(String body) {
-		this.body = body;
-	}
-
-	private void setSection_id(Long section_id) {
-		this.section_id = section_id;
-	}
-
-	private void setComments_disabled(Boolean comments_disabled) {
-		this.comments_disabled = comments_disabled;
 	}
 }

@@ -1,6 +1,7 @@
-package com.ghostery.zendesktools;
+package com.ghostery.zendesktools.actions;
 
 import com.ghostery.zendesktools.interfaces.AsyncRequest;
+import com.ghostery.zendesktools.models.Macro;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import org.asynchttpclient.Request;
@@ -18,28 +19,19 @@ import static com.ghostery.zendesktools.interfaces.Constants.CURRENT_API_URL;
 import static com.ghostery.zendesktools.interfaces.Constants.LEGACY_API_URL;
 
 /**
- * Ghostery Zendesk Tools
+ * Macro Controller
  *
  * @author Ghostery Engineering
  *
  * Copyright 2018 Ghostery, Inc. All rights reserved.
  */
-
-public class Macro implements AsyncRequest {
-
-	private String title;
-	private String description;
-	private Boolean active;
-	private List<Map<String, Object>> actions;
-
-	private Macro() {}
-
+public class MacroController {
 	/**
 	 * Retrieve a list of macros from Zendesk
 	 * @throws ExecutionException
 	 * @throws InterruptedException
 	 */
-	protected static ArrayList<Macro> getMacros() throws ExecutionException, InterruptedException {
+	public ArrayList<Macro> getMacros() throws ExecutionException, InterruptedException {
 		System.out.println("GETTING MACROS...");
 		String legacyURL = LEGACY_API_URL + "/macros.json";
 
@@ -62,17 +54,16 @@ public class Macro implements AsyncRequest {
 	 * Factory function to generate Macros from JSONArray
 	 * @param macros
 	 */
-	private static ArrayList<Macro> buildMacros(JSONArray macros) {
+	private ArrayList<Macro> buildMacros(JSONArray macros) {
 		ArrayList<Macro> output = new ArrayList<>();
 		for (int i = 0; i < macros.length(); i++) {
 			JSONObject macro = macros.getJSONObject(i);
-			Macro m = new Macro();
-
-			m.setTitle(macro.getString("title"));
-			m.setDescription(macro.optString("description", null));
-			m.setActive(macro.getBoolean("active"));
-			m.setActions(buildActionList(macro.getJSONArray("actions")));
-
+			Macro m = new Macro(
+					macro.getString("title"),
+					macro.optString("description", null),
+					macro.getBoolean("active"),
+					buildActionList(macro.getJSONArray("actions"))
+			);
 			output.add(m);
 		}
 		return output;
@@ -83,7 +74,7 @@ public class Macro implements AsyncRequest {
 	 * @param macros
 	 * @return
 	 */
-	protected static void postMacros(ArrayList<Macro> macros) {
+	public void postMacros(ArrayList<Macro> macros) {
 		System.out.println("POSTING MACROS...");
 
 		String currentURL = CURRENT_API_URL + "/macros.json";
@@ -114,7 +105,7 @@ public class Macro implements AsyncRequest {
 	 * @param json
 	 * @return
 	 */
-	private static List<Map<String, Object>> buildActionList(JSONArray json) {
+	private List<Map<String, Object>> buildActionList(JSONArray json) {
 		Gson gson = new Gson();
 		Type listType = new TypeToken<List<Map>>(){}.getType();
 		List<Map<String, Object>> output = gson.fromJson(json.toString(), listType);
@@ -130,27 +121,5 @@ public class Macro implements AsyncRequest {
 		}
 
 		return output;
-	}
-
-	@Override
-	public String toString(){
-		Gson gson = new Gson();
-		return gson.toJson(this);
-	}
-
-	private void setTitle(String title) {
-		this.title = title;
-	}
-
-	private void setDescription(String description) {
-		this.description = description;
-	}
-
-	private void setActive(Boolean active) {
-		this.active = active;
-	}
-
-	private void setActions(List<Map<String, Object>> actions) {
-		this.actions = actions;
 	}
 }
