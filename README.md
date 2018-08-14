@@ -13,7 +13,7 @@ Quick and dirty API tools for Zendesk
 
 2. Import dependencies from Maven.
 
-3. For MacOS, you may need to bump the limit on the maximum number of open files (for using Ticket.getTickets())
+3. For MacOS, you may need to bump the limit on the maximum number of open files (for using `TicketController::getTickets()`)
 
 ```bash
 $ echo kern.maxfiles=65536 | sudo tee -a /etc/sysctl.conf

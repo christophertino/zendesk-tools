@@ -27,6 +27,9 @@ public class ZendeskTools implements AsyncRequest, RequestHandler<Map<String,Obj
 	private MacroController macroController = new MacroController();
 	private TicketController ticketController = new TicketController();
 
+	// AWS Lambda requires a public zero-argument constructor
+	public ZendeskTools(){}
+
 	public ZendeskTools(String target) throws ExecutionException, InterruptedException {
 		System.out.println("Running API target: " + target);
 		switch (target) {
