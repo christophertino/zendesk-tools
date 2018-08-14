@@ -27,34 +27,52 @@ public class ZendeskTools implements AsyncRequest, RequestHandler<Map<String,Obj
 	private MacroController macroController = new MacroController();
 	private TicketController ticketController = new TicketController();
 
-	public ZendeskTools() throws ExecutionException, InterruptedException {
-		//GET and POST all categories, sections and articles
-		ArrayList<Article> articles = articleController.getArticles();
-		articleController.postArticles(articles);
-
-		//GET and POST all macros
-
-		ArrayList<Macro> macros = macroController.getMacros();
-		macroController.postMacros(macros);
-
-		//GET and POST a single ticket along with users and comments
-
-		Ticket ticket = ticketController.getTicket(12697);
-		ticketController.postTicket(ticket);
-
-		//Iterate over all tickets and POST in batches of 100, along with users and comments
-		ticketController.getTickets();
-
-		//Update existing tickets
-		TicketController.getNewTickets();
-
-		//Bulk change all article authors to Ghostery Support
-		articleController.updateArtcleAuthor();
+	public ZendeskTools(String target) throws ExecutionException, InterruptedException {
+		System.out.println("Running API target: " + target);
+		switch (target) {
+			case "articles" :
+				//GET and POST all categories, sections and articles
+				ArrayList<Article> articles = articleController.getArticles();
+				articleController.postArticles(articles);
+				break;
+			case "macros" :
+				//GET and POST all macros
+				ArrayList<Macro> macros = macroController.getMacros();
+				macroController.postMacros(macros);
+				break;
+			case "ticket" :
+				//GET and POST a single ticket along with users and comments
+				Ticket ticket = ticketController.getTicket(12697); //@TODO add ticketID to args
+				ticketController.postTicket(ticket);
+				break;
+			case "tickets" :
+				//Iterate over all tickets and POST in batches of 100, along with users and comments
+				ticketController.getTickets();
+				break;
+			case "update_tickets" :
+				//Update existing tickets
+				TicketController.getNewTickets();
+				break;
+			case "update_author" :
+				//Bulk change all article authors to Ghostery Support
+				articleController.updateArtcleAuthor();
+				break;
+			default :
+				break;
+		}
 	}
 
+	/**
+	 * Main method
+	 * @param args      Zendesk API target
+	 */
 	public static void main(String[] args) {
 		try {
-			new ZendeskTools();
+			if (args.length != 0) {
+				new ZendeskTools(args[0]);
+			} else {
+				System.out.println("Please specify an API to target");
+			}
 		} catch (ExecutionException | InterruptedException e) {
 			e.printStackTrace();
 		}
