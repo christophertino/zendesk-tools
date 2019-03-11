@@ -31,4 +31,6 @@ $ ulimit -n 65536 65536
 
 ### License
 
-Copyright 2018 Ghostery, Inc. All rights reserved.
+[MPL-2.0](https://www.mozilla.org/en-US/MPL/2.0/)
+
+See [LICENSE](LICENSE)

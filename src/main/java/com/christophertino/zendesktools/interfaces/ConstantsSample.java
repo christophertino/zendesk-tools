@@ -1,11 +1,10 @@
-package com.ghostery.zendesktools.interfaces;
+package com.christophertino.zendesktools.interfaces;
 
 /**
- * Ghostery Zendesk Tools
+ * Zendesk Tools
  *
- * @author Ghostery Engineering
- *
- * Copyright 2018 Ghostery, Inc. All rights reserved.
+ * @author Christopher Tino
+ * @since 1.0
  */
 
 public interface ConstantsSample {

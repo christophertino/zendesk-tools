@@ -1,14 +1,14 @@
-package com.ghostery.zendesktools;
+package com.christophertino.zendesktools;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
-import com.ghostery.zendesktools.actions.ArticleController;
-import com.ghostery.zendesktools.actions.MacroController;
-import com.ghostery.zendesktools.actions.TicketController;
-import com.ghostery.zendesktools.interfaces.AsyncRequest;
-import com.ghostery.zendesktools.models.Article;
-import com.ghostery.zendesktools.models.Macro;
-import com.ghostery.zendesktools.models.Ticket;
+import com.christophertino.zendesktools.actions.ArticleController;
+import com.christophertino.zendesktools.actions.MacroController;
+import com.christophertino.zendesktools.actions.TicketController;
+import com.christophertino.zendesktools.interfaces.AsyncRequest;
+import com.christophertino.zendesktools.models.Article;
+import com.christophertino.zendesktools.models.Macro;
+import com.christophertino.zendesktools.models.Ticket;
 
 import java.util.ArrayList;
 import java.util.Map;
@@ -17,9 +17,8 @@ import java.util.concurrent.ExecutionException;
 /**
  * Zendesk Tools
  *
- * @author Ghostery Engineering
- *
- * Copyright 2018 Ghostery, Inc. All rights reserved.
+ * @author Christopher Tino
+ * @since 1.0
  */
 
 public class ZendeskTools implements AsyncRequest, RequestHandler<Map<String,Object>, String> {
@@ -32,6 +31,9 @@ public class ZendeskTools implements AsyncRequest, RequestHandler<Map<String,Obj
 
 	public ZendeskTools(String target) throws ExecutionException, InterruptedException {
 		System.out.println("Running API target: " + target);
+		articleController = new ArticleController();
+		macroController = new MacroController();
+		ticketController = new TicketController();
 		switch (target) {
 			case "articles" :
 				//GET and POST all categories, sections and articles
@@ -57,7 +59,7 @@ public class ZendeskTools implements AsyncRequest, RequestHandler<Map<String,Obj
 				TicketController.getNewTickets();
 				break;
 			case "update_author" :
-				//Bulk change all article authors to Ghostery Support
+				//Bulk change all article authors to new author ID
 				articleController.updateArtcleAuthor();
 				break;
 			default :
@@ -84,7 +86,7 @@ public class ZendeskTools implements AsyncRequest, RequestHandler<Map<String,Obj
 	/**
 	 * Entry point for AWS Lambda execution
 	 * @param input     set this to a Map<> to handle JSON input
-	 * @param context
+	 * @param context   Lambda context
 	 * @return
 	 */
 	@Override

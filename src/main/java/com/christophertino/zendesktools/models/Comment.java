@@ -1,14 +1,13 @@
-package com.ghostery.zendesktools.models;
+package com.christophertino.zendesktools.models;
 
-import com.ghostery.zendesktools.interfaces.AsyncRequest;
+import com.christophertino.zendesktools.interfaces.AsyncRequest;
 import com.google.gson.Gson;
 
 /**
- * Ghostery Zendesk Tools
+ * Zendesk Tools
  *
- * @author Ghostery Engineering
- *
- * Copyright 2018 Ghostery, Inc. All rights reserved.
+ * @author Christopher Tino
+ * @since 1.0
  */
 
 public class Comment implements AsyncRequest {

@@ -1,18 +1,17 @@
-package com.ghostery.zendesktools.interfaces;
+package com.christophertino.zendesktools.interfaces;
 
 import org.asynchttpclient.*;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.concurrent.Future;
 
-import static com.ghostery.zendesktools.interfaces.Constants.*;
+import static com.christophertino.zendesktools.interfaces.Constants.*;
 
 /**
- * Ghostery Zendesk Tools
+ * Zendesk Tools
  *
- * @author Ghostery Engineering
- *
- * Copyright 2018 Ghostery, Inc. All rights reserved.
+ * @author Christopher Tino
+ * @since 1.0
  */
 
 public interface AsyncRequest {

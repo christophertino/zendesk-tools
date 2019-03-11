@@ -1,25 +1,15 @@
-package com.ghostery.zendesktools.models;
+package com.christophertino.zendesktools.models;
 
-import com.ghostery.zendesktools.interfaces.AsyncRequest;
+import com.christophertino.zendesktools.interfaces.AsyncRequest;
 import com.google.gson.Gson;
-import org.asynchttpclient.Request;
-import org.asynchttpclient.Response;
-import org.json.JSONArray;
-import org.json.JSONObject;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-
-import static com.ghostery.zendesktools.interfaces.Constants.CURRENT_API_URL;
 
 /**
- * Ghostery Zendesk Tools
+ * Zendesk Tools
  *
- * @author Ghostery Engineering
- *
- * Copyright 2018 Ghostery, Inc. All rights reserved.
+ * @author Christopher Tino
+ * @since 1.0
  */
 public class Section implements AsyncRequest {
 	public static HashMap<Integer, Long> sectionIDs = new HashMap<>();

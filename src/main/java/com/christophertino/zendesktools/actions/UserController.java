@@ -1,7 +1,7 @@
-package com.ghostery.zendesktools.actions;
+package com.christophertino.zendesktools.actions;
 
-import com.ghostery.zendesktools.interfaces.AsyncRequest;
-import com.ghostery.zendesktools.models.User;
+import com.christophertino.zendesktools.models.User;
+import com.christophertino.zendesktools.interfaces.AsyncRequest;
 import org.apache.commons.text.StringEscapeUtils;
 import org.asynchttpclient.Request;
 import org.asynchttpclient.Response;
@@ -12,14 +12,13 @@ import java.util.ArrayList;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
-import static com.ghostery.zendesktools.interfaces.Constants.CURRENT_API_URL;
+import static com.christophertino.zendesktools.interfaces.Constants.CURRENT_API_URL;
 
 /**
  * User Controller
  *
- * @author Ghostery Engineering
- *
- * Copyright 2018 Ghostery, Inc. All rights reserved.
+ * @author Christopher Tino
+ * @since 1.0
  */
 public class UserController {
 	/**
